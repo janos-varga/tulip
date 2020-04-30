@@ -3,7 +3,7 @@ INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR} ${TulipCoreBuildInclude} ${Tulip
 SET(PLUGINS_SRCS
 OGDFFm3.cpp
 OGDFUpwardPlanarization.cpp
-OGDFFrutchermanReingold.cpp
+OGDFFruchtermanReingold.cpp
 OGDFFastMultipoleMultilevelEmbedder.cpp
 OGDFFastMultipoleEmbedder.cpp
 OGDFVisibility.cpp
@@ -13,7 +13,7 @@ OGDFBalloon.cpp
 OGDFDavidsonHarel.cpp
 OGDFTree.cpp
 OGDFGemFrick.cpp
-OGDFStressMajorization.cpp
+OGDFStressMinimization.cpp
 OGDFSugiyama.cpp
 OGDFDominance.cpp
 OGDFPlanarizationGrid.cpp
