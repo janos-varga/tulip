@@ -6,6 +6,7 @@ INSTALL(FILES
   tulip/GlAbstractPolygon.h
   tulip/GlAxis.h
   tulip/GlBezierCurve.h
+  tulip/GlBoundingBoxSceneVisitor.h
   tulip/GlBox.h
   tulip/GlCatmullRomCurve.h
   tulip/GlCircle.h
@@ -20,6 +21,7 @@ INSTALL(FILES
   tulip/GlGraphComposite.h
   tulip/GlGraphInputData.h
   tulip/GlGraphRenderingParameters.h
+  tulip/GlGraphStaticData.h
   tulip/GlGrid.h
   tulip/GlHexagon.h
   tulip/GlLabel.h
@@ -27,6 +29,7 @@ INSTALL(FILES
   tulip/GlLine.h
   tulip/GlLines.h
   tulip/GlLODCalculator.h
+  tulip/GlMetaNodeRenderer.h
   tulip/GlNode.h
   tulip/GlOpenUniformCubicBSpline.h
   tulip/GlPentagon.h
@@ -46,6 +49,7 @@ INSTALL(FILES
   tulip/GlTools.h
   tulip/GlVertexArrayManager.h
   tulip/Glyph.h
+  tulip/GlyphManager.h
   tulip/OcclusionTest.h
   tulip/OpenGlConfigManager.h
   tulip/OpenGlIncludes.h

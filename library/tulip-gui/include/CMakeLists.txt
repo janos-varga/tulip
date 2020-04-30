@@ -1,26 +1,61 @@
 INSTALL(FILES
+  tulip/AboutTulipPage.h
   tulip/CaptionItem.h
+  tulip/ColorButton.h
   tulip/ColorScaleConfigDialog.h
   tulip/GLInteractor.h
   tulip/GlMainView.h
   tulip/GlMainWidget.h
   tulip/GlOffscreenRenderer.h
+  tulip/GlOverviewGraphicsItem.h
+  tulip/GraphHierarchiesModel.h
+  tulip/GraphModel.h
+  tulip/GraphNeedsSavingObserver.h
+  tulip/GraphPropertiesModel.h
   tulip/GraphPropertiesSelectionWidget.h
   tulip/Interactor.h
   tulip/InteractorComposite.h
+  tulip/MouseEdgeBendEditor.h
+  tulip/MouseEdgeBuilder.h
   tulip/MouseInteractors.h
+  tulip/MouseSelectionEditor.h
+  tulip/MouseSelector.h
+  tulip/MouseShowElementInfo.h
   tulip/NodeLinkDiagramComponent.h
   tulip/NodeLinkDiagramComponentInteractor.h
+  tulip/ParameterListModel.h
   tulip/Perspective.h
+  tulip/PluginModel.h
+  tulip/PropertyCreationDialog.h
   tulip/QtGlSceneZoomAndPanAnimator.h
   tulip/QuickAccessBar.h
+  tulip/SceneConfigWidget.h
+  tulip/ScientificDoubleSpinBox.h
   tulip/SimplePluginProgressWidget.h
   tulip/StringsListSelectionWidget.h
   tulip/StringsListSelectionWidgetInterface.h
   tulip/TlpQtTools.h
+  tulip/TulipFont.h
+  tulip/TulipFontIconEngine.h
+  tulip/TulipItemDelegate.h
+  tulip/TulipItemEditorCreators.h
+  tulip/TulipMetaTypes.h
+  tulip/TulipMimes.h
+  tulip/TulipModel.h
   tulip/TulipProject.h
+  tulip/TulipSettings.h
+  tulip/VectorEditor.h
   tulip/View.h
   tulip/ViewWidget.h
+  tulip/Workspace.h
 DESTINATION ${TulipIncludeInstallDir}/tulip/
 COMPONENT tulip_gui_dev
+)
+
+INSTALL(FILES
+    tulip/cxx/TulipItemDelegate.cxx
+    tulip/cxx/TulipItemEditorCreators.cxx
+    tulip/cxx/GraphPropertiesModel.cxx
+    DESTINATION ${TulipIncludeInstallDir}/tulip/cxx/
+    COMPONENT tulip_gui_dev
 )
