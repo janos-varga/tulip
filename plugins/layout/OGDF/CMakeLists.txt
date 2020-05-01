@@ -12,6 +12,7 @@ OGDFCircular.cpp
 OGDFBalloon.cpp
 OGDFDavidsonHarel.cpp
 OGDFTree.cpp
+OGDFRadialTree.cpp
 OGDFGemFrick.cpp
 OGDFStressMinimization.cpp
 OGDFSugiyama.cpp
@@ -21,7 +22,7 @@ OGDFBertaultLayout.cpp
 OGDFPivotMDS.cpp
 OGDFTileToRowsPacking.cpp
 OGDFPlanarizationLayout.cpp
-OGDFNodeRespecter.cpp
+#OGDFNodeRespecter.cpp
 )
 
 DISABLE_COMPILER_WARNINGS()

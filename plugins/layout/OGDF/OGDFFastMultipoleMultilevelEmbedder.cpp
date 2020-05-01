@@ -41,18 +41,17 @@ public:
                     "which utilizes various tools to speed up the computation.",
                     "1.1", "Multilevel")
   OGDFFastMultipoleMultiLevelEmbedder(const tlp::PluginContext *context)
-      : OGDFLayoutPluginBase(context, new ogdf::ComponentSplitterLayout()),
-        fmme(new ogdf::FastMultipoleMultilevelEmbedder()) {
+      : OGDFLayoutPluginBase(context, new ogdf::ComponentSplitterLayout()){
     addInParameter<int>("number of threads", paramHelp[0], "2");
     addInParameter<int>("multilevel nodes bound", paramHelp[1], "10");
   }
 
-  ~OGDFFastMultipoleMultiLevelEmbedder() override {}
-
   void beforeCall() override {
+
       ogdf::ComponentSplitterLayout *csl =
           static_cast<ogdf::ComponentSplitterLayout *>(ogdfLayoutAlgo);
       // ComponentSplitterLayout takes ownership of the FastMultipoleMultilevelEmbedder instance
+      FastMultipoleMultilevelEmbedder *fmme = new FastMultipoleMultilevelEmbedder();
       csl->setLayoutModule(fmme);
 
     if (dataSet != nullptr) {
@@ -69,8 +68,6 @@ public:
     //  ogdf::makeSimple(tlpToOGDF->getOGDFGraph());
   }
 
-private:
-  ogdf::FastMultipoleMultilevelEmbedder *fmme;
 };
 
 PLUGIN(OGDFFastMultipoleMultiLevelEmbedder)
