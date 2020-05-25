@@ -75,23 +75,6 @@ IF(NOT LINUX)
 ENDIF(NOT LINUX)
 
 ## ========================================================
-## Operating system preprocessor macros
-## ========================================================
-IF(LINUX)
-  ADD_DEFINITIONS("-D_LINUX")
-ENDIF(LINUX)
-IF(WIN32)
-  ADD_DEFINITIONS("-D_WIN32")
-  # ensure WIN32 is defined (as it is not the case when compiling with MinGW and C++11 standard activated)
-  ADD_DEFINITIONS("-DWIN32")
-  # ensure math defines (e.g. M_PI) are available (as they have been dropped from C++11 standard)
-  ADD_DEFINITIONS("-D_USE_MATH_DEFINES")
-ENDIF(WIN32)
-IF(APPLE)
-  ADD_DEFINITIONS("-D__APPLE__")
-ENDIF(APPLE)
-
-## ========================================================
 ## AppImage build
 ## ========================================================
 IF (TULIP_BUILD_FOR_APPIMAGE)
@@ -346,7 +329,7 @@ ENDIF(TULIP_BUILD_PYTHON_COMPONENTS)
 ## Include and library paths
 ## ========================================================
 SET(GZStreamInclude ${PROJECT_SOURCE_DIR}/thirdparty/gzstream/)
-SET(GZStreamLibrary gzstream-tulip-${TulipMMVersion})
+SET(GZStreamLibrary gzstream)
 IF(NOT TULIP_BUILD_CORE_ONLY)
   IF(QUAZIP_FOUND)
     SET(QuazipInclude ${QUAZIP_INCLUDE_DIRS})
@@ -553,14 +536,14 @@ SET(QT_LDFLAGS "${QT_QTCORE_LIBRARY_RELEASE} ${QT_QTGUI_LIBRARY_RELEASE} ${QT_QT
 
 # if needed, enable C++11 in tulip-config --cxxflags
 IF(CMAKE_COMPILER_IS_GNUCXX AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 4.7)
-  SET(TULIP_CONFIG_CXX11_FLAG "-std=c++0x")
+  SET(TULIP_CONFIG_CXX11_FLAGS "-std=c++0x")
 ELSE(CMAKE_COMPILER_IS_GNUCXX AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 4.7)
   IF((CMAKE_COMPILER_IS_GNUCXX AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 6.1) OR CLANG)
-    SET(TULIP_CONFIG_CXX11_FLAG "-std=c++11")
+    SET(TULIP_CONFIG_CXX11_FLAGS "-std=c++11")
   ENDIF((CMAKE_COMPILER_IS_GNUCXX AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 6.1) OR CLANG)
 ENDIF(CMAKE_COMPILER_IS_GNUCXX AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 4.7)
 IF(CLANG AND APPLE)
-  SET(TULIP_CONFIG_CXX11_FLAG "-std=c++11 -stdlib=libc++")
+  SET(TULIP_CONFIG_CXX11_FLAGS "-std=c++11 -stdlib=libc++")
 ENDIF(CLANG AND APPLE)
 
 CONFIGURE_FILE("tulip-config.in" "tulip-config" @ONLY)

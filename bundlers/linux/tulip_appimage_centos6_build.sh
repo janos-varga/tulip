@@ -17,7 +17,7 @@ yum -y install devtoolset-7
 
 # install tulip deps
 yum -y install zlib-devel qhull-devel cppunit-devel
-yum -y install freetype-devel libpng-devel libjpeg-devel glew-devel
+yum -y install freetype-devel glew-devel
 
 # needed for generating the AppImage
 yum -y install fuse fuse-libs
@@ -39,16 +39,18 @@ else
 fi
 
 # install Python 3.6 from the IUS Community Project
-wget https://centos6.iuscommunity.org/ius-release.rpm
+wget https://repo.ius.io/ius-release-el6.rpm
 rpm -Uvh ius-release*rpm
 yum -y install python36u-devel python36u-pip
 pip3.6 install sphinx
 
 # build and install tulip
 if [ -d /tulip/build ]; then
-  rm -rf /tulip/build
+  rm -rf /tulip/build/*
+else
+  mkdir /tulip/build
 fi
-mkdir /tulip/build
+
 cd /tulip/build
 if [ "$1" == "NO_CCACHE" ]; then
   CCACHE=OFF
@@ -69,12 +71,19 @@ if [ "$2" == "RUN_TESTS" ]; then
   make runTests
 fi
 
+PERSPECTIVE=Tulip
+if [ "$4" == "" ]; then
+  PERSPECTIVE=Tulip
+else
+  PERSPECTIVE=$4
+fi
+
 # build a bundle dir suitable for AppImageKit
-sh bundlers/linux/make_appimage_bundle.sh --appdir $PWD
+sh bundlers/linux/make_appimage_bundle.sh --appdir $PWD --perspective $PERSPECTIVE
 
 # get appimagetool
 wget "https://github.com/probonopd/AppImageKit/releases/download/continuous/appimagetool-$(uname -p).AppImage"
 chmod a+x appimagetool-$(uname -p).AppImage
 
 # finally build the portable app
-./appimagetool-$(uname -p).AppImage Tulip.AppDir Tulip-$(sh tulip-config --version)-$(uname -p).AppImage
+./appimagetool-$(uname -p).AppImage $PERSPECTIVE.AppDir $PERSPECTIVE-$(sh tulip-config --version)-$(uname -p).AppImage
