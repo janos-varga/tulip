@@ -218,69 +218,72 @@ ELSE()
   ENDMACRO()
 ENDIF()
 
-SET(TULIP_BUILD_PYTHON_COMPONENTS ON CACHE BOOL "Do you want to build Tulip Python components ? [ON|OFF]")
-IF(TULIP_BUILD_PYTHON_COMPONENTS)
-  SET(TULIP_PYTHON_ROOT_FOLDER ${CMAKE_BINARY_DIR}/library/tulip-python/bindings/tulip-core/tulip_module)
-  SET(TULIP_PYTHON_FOLDER ${TULIP_PYTHON_ROOT_FOLDER}/tulip)
-  SET(TULIPGUI_PYTHON_ROOT_FOLDER ${CMAKE_BINARY_DIR}/library/tulip-python/bindings/tulip-gui/tulipgui_module)
-  SET(TULIPGUI_PYTHON_FOLDER ${TULIPGUI_PYTHON_ROOT_FOLDER}/tulipgui)
-  SET(TULIP_PYTHON_NATIVE_FOLDER ${TULIP_PYTHON_FOLDER}/native)
-  SET(TULIPGUI_PYTHON_NATIVE_FOLDER ${TULIPGUI_PYTHON_FOLDER}/native)
-  SET(TULIP_ACTIVATE_PYTHON_WHEEL_TARGET OFF CACHE BOOL "Add a wheel make target for generating Python tulip-core module wheel ? [ON|OFF]")
-  IF(TULIP_ACTIVATE_PYTHON_WHEEL_TARGET)
-    SET(TULIP_BUILD_CORE_ONLY ON)
-    IF(APPLE)
-      # build binaries with install rpath when generating Tulip Python wheels
-      # for MacOs as we don't install the project in that case
-      SET(CMAKE_BUILD_WITH_INSTALL_RPATH ON)
-    ELSEIF(LINUX)
-      FILE(READ /etc/issue LINUX_ISSUE)
-      IF((NOT "${LINUX_ISSUE}" MATCHES ".*CentOS release 5\\.11 \\(Final\\).*" AND NOT "${LINUX_ISSUE}" MATCHES ".*CentOS release 6\\.10 \\(Final\\).*") OR NOT EXISTS /usr/local/bin/auditwheel)
-        MESSAGE(FATAL_ERROR "Python binary wheels for Linux platform must be compiled using the CentOS (5.11 or 6.10) docker images provided by the manylinux project from the Python Packaging Authority.\nSee https://github.com/pypa/manylinux for more details.")
-      ENDIF()
-      # build binaries with install rpath when generating Tulip Python wheels for Linux
-      # as we don't install the project in that case
-      SET(CMAKE_BUILD_WITH_INSTALL_RPATH ON)
-    ENDIF(APPLE)
-  ENDIF(TULIP_ACTIVATE_PYTHON_WHEEL_TARGET)
-ENDIF(TULIP_BUILD_PYTHON_COMPONENTS)
+IF (NOT TRAVIS_BUILD_THIRDPARTY_ONLY)
+  SET(TULIP_BUILD_PYTHON_COMPONENTS ON CACHE BOOL "Do you want to build Tulip Python components ? [ON|OFF]")
+  IF(TULIP_BUILD_PYTHON_COMPONENTS)
+    SET(TULIP_PYTHON_ROOT_FOLDER ${CMAKE_BINARY_DIR}/library/tulip-python/bindings/tulip-core/tulip_module)
+    SET(TULIP_PYTHON_FOLDER ${TULIP_PYTHON_ROOT_FOLDER}/tulip)
+    SET(TULIPGUI_PYTHON_ROOT_FOLDER ${CMAKE_BINARY_DIR}/library/tulip-python/bindings/tulip-gui/tulipgui_module)
+    SET(TULIPGUI_PYTHON_FOLDER ${TULIPGUI_PYTHON_ROOT_FOLDER}/tulipgui)
+    SET(TULIP_PYTHON_NATIVE_FOLDER ${TULIP_PYTHON_FOLDER}/native)
+    SET(TULIPGUI_PYTHON_NATIVE_FOLDER ${TULIPGUI_PYTHON_FOLDER}/native)
+    SET(TULIP_ACTIVATE_PYTHON_WHEEL_TARGET OFF CACHE BOOL "Add a wheel make target for generating Python tulip-core module wheel ? [ON|OFF]")
+    IF(TULIP_ACTIVATE_PYTHON_WHEEL_TARGET)
+      SET(TULIP_BUILD_CORE_ONLY ON)
+      IF(APPLE)
+	# build binaries with install rpath when generating Tulip Python wheels
+	# for MacOs as we don't install the project in that case
+	SET(CMAKE_BUILD_WITH_INSTALL_RPATH ON)
+      ELSEIF(LINUX)
+	FILE(READ /etc/issue LINUX_ISSUE)
+	IF((NOT "${LINUX_ISSUE}" MATCHES ".*CentOS release 5\\.11 \\(Final\\).*" AND NOT "${LINUX_ISSUE}" MATCHES ".*CentOS release 6\\.10 \\(Final\\).*") OR NOT EXISTS /usr/local/bin/auditwheel)
+          MESSAGE(FATAL_ERROR "Python binary wheels for Linux platform must be compiled using the CentOS (5.11 or 6.10) docker images provided by the manylinux project from the Python Packaging Authority.\nSee https://github.com/pypa/manylinux for more details.")
+	ENDIF()
+	# build binaries with install rpath when generating Tulip Python wheels for Linux
+	# as we don't install the project in that case
+	SET(CMAKE_BUILD_WITH_INSTALL_RPATH ON)
+      ENDIF(APPLE)
+    ENDIF(TULIP_ACTIVATE_PYTHON_WHEEL_TARGET)
+  ENDIF(TULIP_BUILD_PYTHON_COMPONENTS)
 
-## ========================================================
-## Required packages
-## ========================================================
-IF(MINGW)
-  # Set some common libraries and headers search paths for MinGW
-  SET(CMAKE_LIBRARY_PATH "${MINGW_BIN_PATH};${MINGW_LIB_PATH};${MINGW_LIB64_PATH};${CMAKE_LIBRARY_PATH}")
-  SET(CMAKE_INCLUDE_PATH "${MINGW_INCLUDE_PATH};${MINGW_INCLUDE_PATH}/freetype2;${MINGW_INCLUDE_PATH}/libpng*;${CMAKE_INCLUDE_PATH}")
+  ## ========================================================
+  ## Required packages
+  ## ========================================================
+  IF(MINGW)
+    # Set some common libraries and headers search paths for MinGW
+    SET(CMAKE_LIBRARY_PATH "${MINGW_BIN_PATH};${MINGW_LIB_PATH};${MINGW_LIB64_PATH};${CMAKE_LIBRARY_PATH}")
+    SET(CMAKE_INCLUDE_PATH "${MINGW_INCLUDE_PATH};${MINGW_INCLUDE_PATH}/freetype2;${MINGW_INCLUDE_PATH}/libpng*;${CMAKE_INCLUDE_PATH}")
 
-  # Check if libintl is present in the MinGW build environment
-  FIND_LIBRARY(INTL_LIBRARY intl PATHS ${MINGW_LIB_PATH} ${MINGW_LIB64_PATH} NO_DEFAULT_PATH)
-ELSE(MINGW)
-  FIND_LIBRARY(INTL_LIBRARY intl)
-ENDIF(MINGW)
-MARK_AS_ADVANCED(INTL_LIBRARY)
+    # Check if libintl is present in the MinGW build environment
+    FIND_LIBRARY(INTL_LIBRARY intl PATHS ${MINGW_LIB_PATH} ${MINGW_LIB64_PATH} NO_DEFAULT_PATH)
+  ELSE(MINGW)
+    FIND_LIBRARY(INTL_LIBRARY intl)
+  ENDIF(MINGW)
+  MARK_AS_ADVANCED(INTL_LIBRARY)
 
-# Don't need to find zlib when compiling with emscripten as there is an available emscripten port of it
-IF(NOT EMSCRIPTEN)
+  # Don't need to find zlib when compiling with emscripten as there is an available emscripten port of it
+  IF(NOT EMSCRIPTEN)
+    # ZLIB
+    FIND_PACKAGE(ZLIB REQUIRED)
+  ENDIF(NOT EMSCRIPTEN)
+ENDIF(NOT TRAVIS_BUILD_THIRDPARTY_ONLY)
 
-  # ZLIB
-  FIND_PACKAGE(ZLIB REQUIRED)
-
-ENDIF(NOT EMSCRIPTEN)
+# use thirdparty static libs when needed
+IF(TULIP_ACTIVATE_PYTHON_WHEEL_TARGET OR TULIP_BUILD_FOR_APPIMAGE)
+  SET(TULIP_USE_THIRDPARTY_STATIC_LIBS ON)
+ELSE(TULIP_ACTIVATE_PYTHON_WHEEL_TARGET OR TULIP_BUILD_FOR_APPIMAGE)
+  SET(TULIP_USE_THIRDPARTY_STATIC_LIBS OFF)
+ENDIF(TULIP_ACTIVATE_PYTHON_WHEEL_TARGET OR TULIP_BUILD_FOR_APPIMAGE)
 
 # Qhull
-SET(TULIP_USE_THIRDPARTY_QHULL OFF CACHE BOOL "If activated, force the use of reentrant qhull library located in thirdparty instead of trying to find it on the system.")
+SET(TULIP_USE_THIRDPARTY_QHULL ${TULIP_USE_THIRDPARTY_STATIC_LIBS} CACHE BOOL "If activated, force the use of reentrant qhull library located in thirdparty instead of trying to find it on the system.")
 IF(NOT TULIP_USE_THIRDPARTY_QHULL)
   FIND_PACKAGE(Qhull)
 ELSE(NOT TULIP_USE_THIRDPARTY_QHULL)
   UNSET(QHULL_FOUND CACHE)
 ENDIF(NOT TULIP_USE_THIRDPARTY_QHULL)
 
-
-#Yajl
-FIND_PACKAGE(Yajl)
-
-IF(NOT TULIP_BUILD_CORE_ONLY)
+IF(NOT TULIP_BUILD_CORE_ONLY AND NOT TRAVIS_BUILD_THIRDPARTY_ONLY)
   # OpenGL
   FIND_PACKAGE(OpenGL REQUIRED)
 
@@ -311,13 +314,13 @@ ENDIF(TULIP_BUILD_GL_TEX_LOADER)
   FIND_PACKAGE(QtX)
 
   # Quazip
-SET(TULIP_USE_THIRDPARTY_QUAZIP OFF CACHE BOOL "If activated, force the use of quazip library located in thirdparty instead of trying to find it on the system.")
+SET(TULIP_USE_THIRDPARTY_QUAZIP ${TULIP_USE_THIRDPARTY_STATIC_LIBS} CACHE BOOL "If activated, force the use of quazip library located in thirdparty instead of trying to find it on the system.")
 IF(NOT TULIP_USE_THIRDPARTY_QUAZIP)
   FIND_PACKAGE(QuaZip)
 ELSE(NOT TULIP_USE_THIRDPARTY_QUAZIP)
   UNSET(QUAZIP_FOUND CACHE)
 ENDIF(NOT TULIP_USE_THIRDPARTY_QUAZIP)
-ENDIF(NOT TULIP_BUILD_CORE_ONLY)
+ENDIF(NOT TULIP_BUILD_CORE_ONLY AND NOT TRAVIS_BUILD_THIRDPARTY_ONLY)
 
 # Python
 IF(TULIP_BUILD_PYTHON_COMPONENTS)
@@ -329,20 +332,24 @@ ENDIF(TULIP_BUILD_PYTHON_COMPONENTS)
 ## ========================================================
 SET(GZStreamInclude ${PROJECT_SOURCE_DIR}/thirdparty/gzstream/)
 SET(GZStreamLibrary gzstream)
-IF(NOT TULIP_BUILD_CORE_ONLY)
+IF(NOT TULIP_BUILD_CORE_ONLY AND NOT TRAVIS_BUILD_THIRDPARTY_ONLY)
   IF(QUAZIP_FOUND)
     SET(QuazipInclude ${QUAZIP_INCLUDE_DIRS})
     SET(QuazipLibrary ${QUAZIP_LIBRARIES})
   ELSE(QUAZIP_FOUND)
     SET(QuazipInclude ${PROJECT_SOURCE_DIR}/thirdparty/quazip/)
-    SET(QuazipLibrary quazip-tulip-${TulipMMVersion})
+    SET(QuazipLibrary quazip)
+    # use static lib
+    ADD_DEFINITIONS(-DQUAZIP_STATIC)
   ENDIF(QUAZIP_FOUND)
 
   SET(FTGLInclude ${PROJECT_SOURCE_DIR}/thirdparty/ftgl/)
-  SET(FTGLLibrary ftgl-tulip-${TulipMMVersion})
+  SET(FTGLLibrary ftgl)
+  ADD_DEFINITIONS(-DFTGL_LIBRARY_STATIC)
   SET(Tess2Include ${PROJECT_SOURCE_DIR}/thirdparty/libtess2/Include)
-  SET(Tess2Library tess2-tulip-${TulipMMVersion})
-ENDIF(NOT TULIP_BUILD_CORE_ONLY)
+  SET(Tess2Library tess2)
+  ADD_DEFINITIONS(-DTESS2_LIBRARY_STATIC)
+ENDIF(NOT TULIP_BUILD_CORE_ONLY AND NOT TRAVIS_BUILD_THIRDPARTY_ONLY)
 
 SET(OGDFInclude ${PROJECT_SOURCE_DIR}/thirdparty/OGDF/include)
 SET(OGDFBuildInclude ${PROJECT_BINARY_DIR}/thirdparty/OGDF/include)
@@ -357,13 +364,9 @@ ELSE(QHULL_FOUND)
   SET(QhullLibrary qhullstatic)
 ENDIF(QHULL_FOUND)
 
-IF(YAJL_FOUND)
-  SET(YajlInclude ${YAJL_INCLUDE_DIRS})
-  SET(YajlLibrary ${YAJL_LIBRARIES})
-ELSE(YAJL_FOUND)
-  SET(YajlInclude ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/yajl/src ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/yajl/src/api ${CMAKE_CURRENT_BINARY_DIR}/thirdparty/yajl/yajl-2.1.0/include)
-  SET(YajlLibrary yajl-tulip-${TulipMMVersion})
-ENDIF(YAJL_FOUND)
+# use thirdparty/yajl to ensure the static lib can be used to build shared libs
+SET(YajlInclude ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/yajl/src ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/yajl/src/api ${CMAKE_CURRENT_BINARY_DIR}/thirdparty/yajl/yajl-2.1.0/include)
+SET(YajlLibrary yajl_s)
 
 SET(UTF8CppInclude ${PROJECT_SOURCE_DIR}/thirdparty/utf8-cpp/source)
 
@@ -477,15 +480,17 @@ CONFIGURE_FILE("${CMAKE_CURRENT_SOURCE_DIR}/cmake/cmake_uninstall.cmake.in" "${C
 ADD_CUSTOM_TARGET(uninstall COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake VERBATIM)
 
 ADD_SUBDIRECTORY(thirdparty)
-ADD_SUBDIRECTORY(library)
-ADD_SUBDIRECTORY(plugins)
-IF(NOT TULIP_BUILD_CORE_ONLY)
-  ADD_SUBDIRECTORY(doc)
-  ADD_SUBDIRECTORY(textures)
-  ADD_SUBDIRECTORY(externalplugins)
-  ADD_SUBDIRECTORY(demos)
-  ADD_SUBDIRECTORY(software)
-ENDIF(NOT TULIP_BUILD_CORE_ONLY)
+IF (NOT TRAVIS_BUILD_THIRDPARTY_ONLY)
+  ADD_SUBDIRECTORY(library)
+  ADD_SUBDIRECTORY(plugins)
+  IF(NOT TULIP_BUILD_CORE_ONLY)
+    ADD_SUBDIRECTORY(doc)
+    ADD_SUBDIRECTORY(textures)
+    ADD_SUBDIRECTORY(externalplugins)
+    ADD_SUBDIRECTORY(demos)
+    ADD_SUBDIRECTORY(software)
+  ENDIF(NOT TULIP_BUILD_CORE_ONLY)
+ENDIF (NOT TRAVIS_BUILD_THIRDPARTY_ONLY)
 
 IF(TULIP_BUILD_TESTS)
   INCLUDE(CTest)
@@ -544,113 +549,114 @@ IF(CLANG AND APPLE)
   SET(TULIP_CONFIG_CXX11_FLAGS "-std=c++11 -stdlib=libc++")
 ENDIF(CLANG AND APPLE)
 
-CONFIGURE_FILE("tulip-config.in" "tulip-config" @ONLY)
-INSTALL(PROGRAMS ${PROJECT_BINARY_DIR}/tulip-config DESTINATION ${TulipBinInstallDir})
+IF (NOT TRAVIS_BUILD_THIRDPARTY_ONLY)
+  CONFIGURE_FILE("tulip-config.in" "tulip-config" @ONLY)
+  INSTALL(PROGRAMS ${PROJECT_BINARY_DIR}/tulip-config DESTINATION ${TulipBinInstallDir})
 
-IF(NOT TULIP_BUILD_CORE_ONLY)
+  IF(NOT TULIP_BUILD_CORE_ONLY)
 
-  ADD_SUBDIRECTORY(bundlers)
-  # ADD_SUBDIRECTORY(deploy)
+    ADD_SUBDIRECTORY(bundlers)
+    # ADD_SUBDIRECTORY(deploy)
 
-  IF(MSVC)
-    INCLUDE(InstallRequiredSystemLibraries)
-    IF(OPENMP_FOUND)
-      IF(MSVC90)
-        INSTALL(PROGRAMS "${MSVC90_REDIST_DIR}/${CMAKE_MSVC_ARCH}/Microsoft.VC90.OPENMP/vcomp90.dll" DESTINATION ${TulipBinInstallDir})
-      ENDIF(MSVC90)
-      IF(MSVC10)
-        INSTALL(PROGRAMS "${MSVC10_REDIST_DIR}/${CMAKE_MSVC_ARCH}/Microsoft.VC100.OPENMP/vcomp100.dll" DESTINATION ${TulipBinInstallDir})
-      ENDIF(MSVC10)
-      IF(MSVC11)
-        INSTALL(PROGRAMS "${MSVC11_REDIST_DIR}/${CMAKE_MSVC_ARCH}/Microsoft.VC110.OPENMP/vcomp110.dll" DESTINATION ${TulipBinInstallDir})
-      ENDIF(MSVC11)
-      IF(MSVC12)
-        INSTALL(PROGRAMS "${MSVC12_REDIST_DIR}/${CMAKE_MSVC_ARCH}/Microsoft.VC120.OPENMP/vcomp120.dll" DESTINATION ${TulipBinInstallDir})
-      ENDIF(MSVC12)
-      IF(MSVC14 AND MSVC_VERSION EQUAL 1900)
-        INSTALL(PROGRAMS "${MSVC_REDIST_DIR}/${CMAKE_MSVC_ARCH}/Microsoft.VC140.OPENMP/vcomp140.dll" DESTINATION ${TulipBinInstallDir})
-      # for Visual Studio 15.0 2017
-      ELSEIF(MSVC14 AND MSVC_VERSION EQUAL 1910)
-        INSTALL(PROGRAMS "${MSVC_REDIST_DIR}/${CMAKE_MSVC_ARCH}/Microsoft.VC150.OPENMP/vcomp140.dll" DESTINATION ${TulipBinInstallDir})
-      ELSEIF(MSVC14 AND MSVC_VERSION EQUAL 1912)
-        INSTALL(PROGRAMS "${MSVC_REDIST_DIR}/${CMAKE_MSVC_ARCH}/Microsoft.VC141.OPENMP/vcomp140.dll" DESTINATION ${TulipBinInstallDir})
-      ENDIF()
-    ENDIF(OPENMP_FOUND)
-  ENDIF(MSVC)
+    IF(MSVC)
+      INCLUDE(InstallRequiredSystemLibraries)
+      IF(OPENMP_FOUND)
+	IF(MSVC90)
+          INSTALL(PROGRAMS "${MSVC90_REDIST_DIR}/${CMAKE_MSVC_ARCH}/Microsoft.VC90.OPENMP/vcomp90.dll" DESTINATION ${TulipBinInstallDir})
+	ENDIF(MSVC90)
+	IF(MSVC10)
+          INSTALL(PROGRAMS "${MSVC10_REDIST_DIR}/${CMAKE_MSVC_ARCH}/Microsoft.VC100.OPENMP/vcomp100.dll" DESTINATION ${TulipBinInstallDir})
+	ENDIF(MSVC10)
+	IF(MSVC11)
+          INSTALL(PROGRAMS "${MSVC11_REDIST_DIR}/${CMAKE_MSVC_ARCH}/Microsoft.VC110.OPENMP/vcomp110.dll" DESTINATION ${TulipBinInstallDir})
+	ENDIF(MSVC11)
+	IF(MSVC12)
+          INSTALL(PROGRAMS "${MSVC12_REDIST_DIR}/${CMAKE_MSVC_ARCH}/Microsoft.VC120.OPENMP/vcomp120.dll" DESTINATION ${TulipBinInstallDir})
+	ENDIF(MSVC12)
+	IF(MSVC14 AND MSVC_VERSION EQUAL 1900)
+          INSTALL(PROGRAMS "${MSVC_REDIST_DIR}/${CMAKE_MSVC_ARCH}/Microsoft.VC140.OPENMP/vcomp140.dll" DESTINATION ${TulipBinInstallDir})
+	  # for Visual Studio 15.0 2017
+	ELSEIF(MSVC14 AND MSVC_VERSION EQUAL 1910)
+          INSTALL(PROGRAMS "${MSVC_REDIST_DIR}/${CMAKE_MSVC_ARCH}/Microsoft.VC150.OPENMP/vcomp140.dll" DESTINATION ${TulipBinInstallDir})
+	ELSEIF(MSVC14 AND MSVC_VERSION EQUAL 1912)
+          INSTALL(PROGRAMS "${MSVC_REDIST_DIR}/${CMAKE_MSVC_ARCH}/Microsoft.VC141.OPENMP/vcomp140.dll" DESTINATION ${TulipBinInstallDir})
+	ENDIF()
+      ENDIF(OPENMP_FOUND)
+    ENDIF(MSVC)
 
-  IF(WIN32)
-    # initialize the list of bundle libs (second arg of FIXUP_BUNDLE),
-    # updated in plugins/view/GeographicView,
-    # and finally used in software/tulip_perpective/CMakeLists.txt
-    SET_PROPERTY(GLOBAL PROPERTY FIXUP_BUNDLE_LIBS "")
+    IF(WIN32)
+      # initialize the list of bundle libs (second arg of FIXUP_BUNDLE),
+      # updated in plugins/view/GeographicView,
+      # and finally used in software/tulip_perpective/CMakeLists.txt
+      SET_PROPERTY(GLOBAL PROPERTY FIXUP_BUNDLE_LIBS "")
 
-    GET_FILENAME_COMPONENT(NSIS_PATH "[HKEY_LOCAL_MACHINE\\SOFTWARE\\NSIS]" ABSOLUTE)
-    STRING(COMPARE EQUAL "${NSIS_PATH}" "" NSIS_PATH_EMPTY)
-    IF(NSIS_PATH_EMPTY)
-      GET_FILENAME_COMPONENT(NSIS_PATH "[HKEY_LOCAL_MACHINE\\SOFTWARE\\Wow6432Node\\NSIS]" ABSOLUTE)
+      GET_FILENAME_COMPONENT(NSIS_PATH "[HKEY_LOCAL_MACHINE\\SOFTWARE\\NSIS]" ABSOLUTE)
       STRING(COMPARE EQUAL "${NSIS_PATH}" "" NSIS_PATH_EMPTY)
-    ENDIF(NSIS_PATH_EMPTY)
+      IF(NSIS_PATH_EMPTY)
+	GET_FILENAME_COMPONENT(NSIS_PATH "[HKEY_LOCAL_MACHINE\\SOFTWARE\\Wow6432Node\\NSIS]" ABSOLUTE)
+	STRING(COMPARE EQUAL "${NSIS_PATH}" "" NSIS_PATH_EMPTY)
+      ENDIF(NSIS_PATH_EMPTY)
 
-    IF(NOT NSIS_PATH_EMPTY)
+      IF(NOT NSIS_PATH_EMPTY)
 
-      IF(NOT TULIP_BUILD_PYTHON_COMPONENTS OR EXISTS "${NSIS_PATH}/Plugins/inetc.dll" OR EXISTS "${NSIS_PATH}/Plugins/x86-ansi/inetc.dll")
+	IF(NOT TULIP_BUILD_PYTHON_COMPONENTS OR EXISTS "${NSIS_PATH}/Plugins/inetc.dll" OR EXISTS "${NSIS_PATH}/Plugins/x86-ansi/inetc.dll")
 
-        STRING(REPLACE "/" "\\" NSIS_PATH "${NSIS_PATH}")
-        STRING(REPLACE "/" "\\" BINARY_DIR "${CMAKE_CURRENT_BINARY_DIR}")
-        STRING(REPLACE "/" "\\" TLP_DIR "${CMAKE_INSTALL_PREFIX}")
-        STRING(REPLACE "/" "\\" QTX_PLUGINS_DIR "${QT_PLUGINS_DIR}")
+          STRING(REPLACE "/" "\\" NSIS_PATH "${NSIS_PATH}")
+          STRING(REPLACE "/" "\\" BINARY_DIR "${CMAKE_CURRENT_BINARY_DIR}")
+          STRING(REPLACE "/" "\\" TLP_DIR "${CMAKE_INSTALL_PREFIX}")
+          STRING(REPLACE "/" "\\" QTX_PLUGINS_DIR "${QT_PLUGINS_DIR}")
 
-        IF(TulipBuildIsRelease OR MSVC)
-          SET(DEBUG_MODE "FALSE")
-        ELSE(TulipBuildIsRelease OR MSVC)
-          SET(DEBUG_MODE "TRUE")
-        ENDIF(TulipBuildIsRelease OR MSVC)
+          IF(TulipBuildIsRelease OR MSVC)
+            SET(DEBUG_MODE "FALSE")
+          ELSE(TulipBuildIsRelease OR MSVC)
+            SET(DEBUG_MODE "TRUE")
+          ENDIF(TulipBuildIsRelease OR MSVC)
 
-        ADD_CUSTOM_TARGET(bundle
-                          COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_BINARY_DIR}/cmake_install.cmake
-                          COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/bundlers/win/win_bundle.bat ${CMAKE_CURRENT_BINARY_DIR}/bundlers/win/win_bundle.bat
-                          COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/bundlers/win/FileAssociation.nsh ${CMAKE_CURRENT_BINARY_DIR}/FileAssociation.nsh
-                          COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/COPYING.LESSER ${CMAKE_CURRENT_BINARY_DIR}/bundlers/win/COPYING.LESSER
-                          COMMAND cmd //C win_bundle.bat \"${NSIS_PATH}\" \"${TLP_DIR}\" \"${BINARY_DIR}\" ${DEBUG_MODE}
-                          WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/bundlers/win)
+          ADD_CUSTOM_TARGET(bundle
+                            COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_BINARY_DIR}/cmake_install.cmake
+                            COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/bundlers/win/win_bundle.bat ${CMAKE_CURRENT_BINARY_DIR}/bundlers/win/win_bundle.bat
+                            COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/bundlers/win/FileAssociation.nsh ${CMAKE_CURRENT_BINARY_DIR}/FileAssociation.nsh
+                            COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/COPYING.LESSER ${CMAKE_CURRENT_BINARY_DIR}/bundlers/win/COPYING.LESSER
+                            COMMAND cmd //C win_bundle.bat \"${NSIS_PATH}\" \"${TLP_DIR}\" \"${BINARY_DIR}\" ${DEBUG_MODE}
+                            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/bundlers/win)
 
-      ELSE(NOT TULIP_BUILD_PYTHON_COMPONENTS OR EXISTS "${NSIS_PATH}/Plugins/inetc.dll" OR EXISTS "${NSIS_PATH}/Plugins/x86-ansi/inetc.dll")
+        ELSE(NOT TULIP_BUILD_PYTHON_COMPONENTS OR EXISTS "${NSIS_PATH}/Plugins/inetc.dll" OR EXISTS "${NSIS_PATH}/Plugins/x86-ansi/inetc.dll")
 
-        MESSAGE("NSIS Inetc plugin is required to build the Tulip installer.")
-        MESSAGE("Extract ${CMAKE_CURRENT_SOURCE_DIR}/bundlers/win/Inetc.zip in ${NSIS_PATH}.")
+          MESSAGE("NSIS Inetc plugin is required to build the Tulip installer.")
+          MESSAGE("Extract ${CMAKE_CURRENT_SOURCE_DIR}/bundlers/win/Inetc.zip in ${NSIS_PATH}.")
 
-      ENDIF(NOT TULIP_BUILD_PYTHON_COMPONENTS OR EXISTS "${NSIS_PATH}/Plugins/inetc.dll" OR EXISTS "${NSIS_PATH}/Plugins/x86-ansi/inetc.dll")
+        ENDIF(NOT TULIP_BUILD_PYTHON_COMPONENTS OR EXISTS "${NSIS_PATH}/Plugins/inetc.dll" OR EXISTS "${NSIS_PATH}/Plugins/x86-ansi/inetc.dll")
 
-    ELSE(NOT NSIS_PATH_EMPTY)
+      ELSE(NOT NSIS_PATH_EMPTY)
 
-      MESSAGE("Nullsoft Scriptable Install System is not installed on your system")
-      MESSAGE("Tulip installer can not be generated without Nullsoft NSIS.")
+	MESSAGE("Nullsoft Scriptable Install System is not installed on your system")
+	MESSAGE("Tulip installer can not be generated without Nullsoft NSIS.")
 
-    ENDIF(NOT NSIS_PATH_EMPTY)
+      ENDIF(NOT NSIS_PATH_EMPTY)
 
-  ENDIF(WIN32)
+    ENDIF(WIN32)
 
-  IF(APPLE)
+    IF(APPLE)
 
-    CONFIGURE_FILE("${CMAKE_CURRENT_SOURCE_DIR}/bundlers/mac/mac_bundle.sh.in" "${CMAKE_CURRENT_BINARY_DIR}/bundlers/mac/mac_bundle.sh" @ONLY)
-    ADD_CUSTOM_TARGET(bundle
-                      COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_BINARY_DIR}/cmake_install.cmake
-                      COMMAND sh mac_bundle.sh ${CMAKE_CURRENT_BINARY_DIR}
-                      WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/bundlers/mac)
+      CONFIGURE_FILE("${CMAKE_CURRENT_SOURCE_DIR}/bundlers/mac/mac_bundle.sh.in" "${CMAKE_CURRENT_BINARY_DIR}/bundlers/mac/mac_bundle.sh" @ONLY)
+      ADD_CUSTOM_TARGET(bundle
+                        COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_BINARY_DIR}/cmake_install.cmake
+                        COMMAND sh mac_bundle.sh ${CMAKE_CURRENT_BINARY_DIR}
+                        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/bundlers/mac)
 
-  ENDIF(APPLE)
+    ENDIF(APPLE)
 
-  IF(LINUX)
-    CONFIGURE_FILE("${CMAKE_CURRENT_SOURCE_DIR}/bundlers/linux/make_appimage_bundle.sh.in" "${CMAKE_CURRENT_BINARY_DIR}/bundlers/linux/make_appimage_bundle.sh" @ONLY)
-  ENDIF(LINUX)
+    IF(LINUX)
+      CONFIGURE_FILE("${CMAKE_CURRENT_SOURCE_DIR}/bundlers/linux/make_appimage_bundle.sh.in" "${CMAKE_CURRENT_BINARY_DIR}/bundlers/linux/make_appimage_bundle.sh" @ONLY)
+    ENDIF(LINUX)
 
-ELSE(NOT TULIP_BUILD_CORE_ONLY)
+  ELSE(NOT TULIP_BUILD_CORE_ONLY)
 
-  IF(LINUX)
-  # generate script to make a tar archive of minimal set of tulip core files
-    SET(make_tar_file ${PROJECT_BINARY_DIR}/tar-tulip-${TulipVersion}-corefiles.sh)
-    EXECUTE_PROCESS(COMMAND rm ${make_tar_file} OUTPUT_QUIET ERROR_QUIET)
-    EXECUTE_PROCESS(COMMAND echo "#!/bin/sh
+    IF(LINUX)
+      # generate script to make a tar archive of minimal set of tulip core files
+      SET(make_tar_file ${PROJECT_BINARY_DIR}/tar-tulip-${TulipVersion}-corefiles.sh)
+      EXECUTE_PROCESS(COMMAND rm ${make_tar_file} OUTPUT_QUIET ERROR_QUIET)
+      EXECUTE_PROCESS(COMMAND echo "#!/bin/sh
 if [ $# -eq 0 ]; then
 TAR_FILE=${PROJECT_BINARY_DIR}/tulip-${TulipVersion}-corefiles.tar.gz
 else
@@ -660,7 +666,8 @@ cd ${PROJECT_SOURCE_DIR}
 tar zcvf \${TAR_FILE} $ENV{CORE_FILES}
 echo archive \${TAR_FILE} successfully generated" OUTPUT_FILE ${make_tar_file})
 
-    MESSAGE(STATUS "${make_tar_file} successfully generated")
-  ENDIF(LINUX)
+      MESSAGE(STATUS "${make_tar_file} successfully generated")
+    ENDIF(LINUX)
 
-ENDIF(NOT TULIP_BUILD_CORE_ONLY)
+  ENDIF(NOT TULIP_BUILD_CORE_ONLY)
+ENDIF(NOT TRAVIS_BUILD_THIRDPARTY_ONLY)

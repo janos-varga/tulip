@@ -5,8 +5,8 @@
 #     * Qt 5.5 on Linux, Qt 5.9 on MacOS
 #     * Python 2.7
 #  - a "modern" Tulip build using:
-#     * recent compiler (GCC 9.x on Linux, clang 9.x from MacPorts or Homebrew on MacOS)
-#     * Qt 5.13 on Linux, Qt 5.12 on MacOS/MacPorts, Qt 5.13 on MacOS/Homebrew
+#     * recent compiler (GCC 9.x on Linux, clang 10.x from MacPorts or Homebrew on MacOS)
+#     * Qt 5.14.2 on Linux, Qt 5.15 on MacOS/MacPorts, Qt 5.15 on MacOS/Homebrew
 #     * Python 3.8 on Linux, Python 2.7 on MacOS
 # As TravisCI limits build job times to 45 minutes, Tulip is built in two successive stages
 # to avoid timeouts (which happened often with MacOs builds):
@@ -45,7 +45,6 @@ jobs:
             - ccache
             - ninja-build
             - libqhull-dev
-            - libyajl-dev
             - libpython2.7-dev
             - libcppunit-dev
             - binutils-dev
@@ -87,7 +86,6 @@ jobs:
             - ccache
             - ninja-build
             - libqhull-dev
-            - libyajl-dev
             - libcppunit-dev
             - binutils-dev
             - python3.8
@@ -127,6 +125,10 @@ jobs:
         - xvfb
       addons:
         apt:
+          # we use Qt 5.6.1 from ppa:kubuntu-ppa/backports
+          # instead of default 5.5.1 package
+          sources:
+            - sourceline: "ppa:kubuntu-ppa/backports"
           # install Tulip build dependencies
           packages:
             - cmake
@@ -135,7 +137,6 @@ jobs:
             - doxygen
             - graphviz
             - libqhull-dev
-            - libyajl-dev
             - libpython2.7-dev
             - python-sphinx
             - libcppunit-dev
@@ -177,7 +178,7 @@ jobs:
         apt:
           # we need GCC 9.x from ppa:ubuntu-toolchain-r/test
           # Python 3.8.x from ppa:deadsnakes/ppa
-          # and Qt 5.13 from http://archive.neon.kde.org/user/
+          # and Qt 5.14.x from http://archive.neon.kde.org/user/
           sources:
             - sourceline: "ppa:ubuntu-toolchain-r/test"
             - sourceline: "ppa:deadsnakes/ppa"
@@ -192,7 +193,6 @@ jobs:
             - doxygen
             - graphviz
             - libqhull-dev
-            - libyajl-dev
             - libcppunit-dev
             - binutils-dev
             - python3.8
@@ -260,6 +260,146 @@ jobs:
         - sudo docker run --rm=true -e CCACHE_DIR=/ccache --volumes-from ccache --cap-add SYS_ADMIN --device /dev/fuse:/dev/fuse:mrw --rm=true -v `pwd`:/tulip:rw -e DISPLAY=$DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix ${DOCKER_IMAGE} /bin/bash -c "bash -xe /tulip/bundlers/linux/tulip_appimage_centos6_build.sh CCACHE RUN_TESTS"
 
   #==============================================================================================================================================================
+    # Tulip thirdparty build stage on Mac OS
+    - stage: Tulip thirdparty build (Mac OS)
+      # nothing to build if a non-macports platform is specified
+      # at the end of the commit message
+      if: commit_message !~ /\[(linux|homebrew|windows)-only\]$/
+    # legacy Tulip thirdparty build on Mac OS (MacPorts)
+      os: osx
+      # use default osx image
+      #osx_image: xcode9.2
+      compiler: clang
+      cache: ccache
+      install:
+        # set columns in terminal, required for curl to work correctly:
+        - export COLUMNS=80
+        # install MacPorts in order to easily retrieve Tulip dependencies
+        - wget https://raw.githubusercontent.com/GiovanniBussi/macports-ci/master/macports-ci
+        - source ./macports-ci install
+        - export PATH=/opt/local/bin:$PATH
+        # install Tulip core build dependencies
+        - sudo port -N install cmake
+        - sudo port -N install ccache
+        - sudo port -N install ninja
+        - sudo port -N install qhull
+      env:
+        - ENV="MacOS default, AppleClang, MacPorts"
+
+      script:
+        # create build directory
+        - mkdir build && cd build
+        # configure Tulip core build using cmake
+        - cmake .. -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$PWD/install -DTRAVIS_BUILD_THIRDPARTY_ONLY=ON -DTULIP_USE_CCACHE=ON || travis_terminate 1
+        # compile Tulip using ninja for faster builds
+        - ninja -j4 || travis_terminate 1
+
+    #--------------------------------------------------------------------------------------------------------------------------------------------------------------
+    # modern Tulip thirdparty build on Mac OS (MacPorts)
+    -
+      # nothing to build if a non-macports platform is specified
+      # at the end of the commit message
+      if: commit_message !~ /\[(linux|homebrew|windows)-only\]$/
+      os: osx
+      # use the most recent Xcode version
+      osx_image: xcode11.6
+      compiler: clang
+      cache: ccache
+      install:
+        # set columns in terminal, required for curl to work correctly:
+        - export COLUMNS=80
+        # install MacPorts in order to easily retrieve Tulip dependencies
+        - wget https://raw.githubusercontent.com/GiovanniBussi/macports-ci/master/macports-ci
+        - source ./macports-ci install
+        - export PATH=/opt/local/bin:$PATH
+        # install Tulip core build dependencies
+        - sudo port -N install cmake
+        - sudo port -N install clang-10
+        - sudo port -N install ccache
+        - sudo port -N install ninja
+        - sudo port -N install qhull
+      env:
+        - ENV="MacOS most recent, LLVM Clang, MacPorts"
+
+      script:
+        # create build directory
+        - mkdir build && cd build
+        # configure Tulip thirdparty build using cmake
+        - cmake .. -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$PWD/install -DCMAKE_C_COMPILER=/opt/local/bin/clang-mp-10 -DCMAKE_CXX_COMPILER=/opt/local/bin/clang++-mp-10 -DTRAVIS_BUILD_THIRDPARTY_ONLY=ON -DTULIP_USE_CCACHE=ON || travis_terminate 1
+        # compile Tulip using ninja for faster builds
+        - ninja -j4 || travis_terminate 1
+
+    #--------------------------------------------------------------------------------------------------------------------------------------------------------------
+    # legacy Tulip thirdparty build on Mac OS (Homebrew)
+    -
+      # nothing to build if a non-homebrew platform is specified
+      # at the end of the commit message
+      if: commit_message !~ /\[(linux|macports|windows)-only\]$/
+      os: osx
+      # use default osx image
+      #osx_image: xcode9.3
+      compiler: clang
+      cache:
+        ccache: true
+        directories:
+          - $HOME/Library/Caches/Homebrew
+      addons:
+        homebrew:
+          # install Tulip core build dependencies
+          packages:
+            - ccache
+            - cmake
+            - ninja
+            - llvm
+            - qhull
+          update: true
+
+      env:
+        - ENV="MacOS default, LLVM Clang, Homebrew"
+      script:
+        # create build directory
+        - mkdir build && cd build
+        # configure Tulip thirdparty build using cmake
+        - cmake .. -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$PWD/install -DCMAKE_C_COMPILER=/usr/local/opt/llvm/bin/clang -DCMAKE_CXX_COMPILER=/usr/local/opt/llvm/bin/clang++ -DTRAVIS_BUILD_THIRDPARTY_ONLY=ON -DTULIP_USE_CCACHE=ON || travis_terminate 1
+        # compile Tulip using ninja for faster builds
+        - ninja -j4 || travis_terminate 1
+
+    #--------------------------------------------------------------------------------------------------------------------------------------------------------------
+    # modern Tulip thirdparty build on Mac OS (Homebrew)
+    -
+      # nothing to build if a non-homebrew platform is specified
+      # at the end of the commit message
+      if: commit_message !~ /\[(linux|macports|windows)-only\]$/
+      os: osx
+      # use the most recent Xcode version
+      osx_image: xcode11.6
+      compiler: clang
+      cache:
+        ccache: true
+        directories:
+          - $HOME/Library/Caches/Homebrew
+      addons:
+        homebrew:
+          # install Tulip thirdparty build dependencies
+          packages:
+            - ccache
+            - cmake
+            - ninja
+            - llvm
+            - qhull
+          update: true
+
+      env:
+        - ENV="MacOS most recent, LLVM Clang, Homebrew"
+      script:
+        # create build directory
+        - mkdir build && cd build
+        # configure Tulip thirdparty build using cmake
+        - cmake .. -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$PWD/install -DCMAKE_C_COMPILER=/usr/local/opt/llvm/bin/clang -DCMAKE_CXX_COMPILER=/usr/local/opt/llvm/bin/clang++ -DTRAVIS_BUILD_THIRDPARTY_ONLY=ON -DTULIP_USE_CCACHE=ON || travis_terminate 1
+        # compile Tulip using ninja for faster builds
+        - ninja -j4 || travis_terminate 1
+
+  #==============================================================================================================================================================
     # Tulip core build stage on Mac OS
     - stage: Tulip core build (Mac OS)
       # nothing to build if a non-macports platform is specified
@@ -283,7 +423,6 @@ jobs:
         - sudo port -N install ccache
         - sudo port -N install ninja
         - sudo port -N install qhull
-        - sudo port -N install yajl
         - sudo port -N install pkgconfig
         - sudo port -N install cppunit
       env:
@@ -308,7 +447,7 @@ jobs:
       if: commit_message !~ /\[(linux|homebrew|windows)-only\]$/
       os: osx
       # use the most recent Xcode version
-      osx_image: xcode11.4
+      osx_image: xcode11.6
       compiler: clang
       cache: ccache
       install:
@@ -324,11 +463,10 @@ jobs:
         - sudo port -N install ccache
         - sudo port -N install ninja
         - sudo port -N install qhull
-        - sudo port -N install yajl
         - sudo port -N install pkgconfig
         - sudo port -N install cppunit
       env:
-        - ENV="MacOS 10.14, LLVM Clang, MacPorts"
+        - ENV="MacOS most recent, LLVM Clang, MacPorts"
 
       script:
         # create build directory
@@ -364,7 +502,6 @@ jobs:
             - ninja
             - llvm
             - qhull
-            - yajl
             - cppunit
             - pkg-config
           update: true
@@ -390,7 +527,7 @@ jobs:
       if: commit_message !~ /\[(linux|macports|windows)-only\]$/
       os: osx
       # use the most recent Xcode version
-      osx_image: xcode11.4
+      osx_image: xcode11.6
       compiler: clang
       cache:
         ccache: true
@@ -405,13 +542,12 @@ jobs:
             - ninja
             - llvm
             - qhull
-            - yajl
             - cppunit
             - pkg-config
           update: true
 
       env:
-        - ENV="MacOS 10.14, LLVM Clang, Homebrew"
+        - ENV="MacOS most recent, LLVM Clang, Homebrew"
       script:
         # create build directory
         - mkdir build && cd build
@@ -453,7 +589,6 @@ jobs:
         - sudo port -N install freetype
         - sudo port -N install glew
         - sudo port -N install qhull
-        - sudo port -N install yajl
         - sudo port -N install pkgconfig
         - sudo port -N install cppunit
         - curl -O https://bootstrap.pypa.io/get-pip.py
@@ -481,7 +616,7 @@ jobs:
       if: commit_message !~ /\[(linux|homebrew|windows)-only\]$/
       os: osx
       # use the most recent Xcode version
-      osx_image: xcode11.4
+      osx_image: xcode11.6
       compiler: clang
       cache: ccache
       install:
@@ -503,14 +638,13 @@ jobs:
         - sudo port -N install freetype
         - sudo port -N install glew
         - sudo port -N install qhull
-        - sudo port -N install yajl
         - sudo port -N install pkgconfig
         - sudo port -N install cppunit
         - curl -O https://bootstrap.pypa.io/get-pip.py
         - sudo python get-pip.py
         - pip install --user sphinx==1.7.9
       env:
-        - ENV="MacOS 10.14, LLVM Clang, MacPorts"
+        - ENV="MacOS most recent, LLVM Clang, MacPorts"
 
       script:
         # create build directory
@@ -546,7 +680,6 @@ jobs:
             - ninja
             - llvm
             - qhull
-            - yajl
             - cppunit
             - pkg-config
             - glew
@@ -585,7 +718,7 @@ jobs:
       if: commit_message !~ /\[(linux|macports|windows)-only\]$/
       os: osx
       # use the most recent Xcode version
-      osx_image: xcode11.4
+      osx_image: xcode11.6
       compiler: clang
       cache:
         ccache: true
@@ -600,7 +733,6 @@ jobs:
             - ninja
             - llvm
             - qhull
-            - yajl
             - cppunit
             - pkg-config
             - glew
@@ -616,7 +748,7 @@ jobs:
         - sudo python get-pip.py
         - pip install --user sphinx==1.7.9
       env:
-        - ENV="MacOS 10.14, LLVM Clang, Homebrew"
+        - ENV="MacOS most recent, LLVM Clang, Homebrew"
 
       script:
         # workaround for reference to unknown /Applications/Xcode-beta.app
