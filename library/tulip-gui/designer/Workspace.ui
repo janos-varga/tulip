@@ -43,9 +43,14 @@ background-color: #A9A9A9;
      <property name="styleSheet">
       <string notr="true">#workspaceContents {
 border: 0px;
-background-color: white;
 }
-
+QPushButton::flat{
+border-image: none;
+background-color: transparent;
+}
+QPushButton:hover {
+border-image: url(:/tulip/gui/ui/btn_26_hover.png) 4;
+}
 PlaceHolderWidget {
 background-color: white;
 }</string>
@@ -94,11 +99,7 @@ background-color: white;
           <item>
            <widget class="QLabel" name="label">
             <property name="text">
-             <string>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
-&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
-p, li { white-space: pre-wrap; }
-&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'DejaVu Sans'; font-size:10pt; font-weight:400; font-style:normal;&quot;&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;There is no graph currently loaded into the workspace.&lt;br /&gt;Create a new graph from the Graph importing wizard by clicking on the button above&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             <string>&lt;p&gt;&lt;b&gt;There is no graph currently loaded into the workspace.&lt;br/&gt;Create a new graph from the Graph importing wizard by clicking on the button above&lt;/b&gt;&lt;/p&gt;</string>
             </property>
             <property name="alignment">
              <set>Qt::AlignCenter</set>
@@ -165,11 +166,7 @@ p, li { white-space: pre-wrap; }
           <item>
            <widget class="QLabel" name="startupMessageLabel">
             <property name="text">
-             <string>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
-&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
-p, li { white-space: pre-wrap; }
-&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'DejaVu Sans'; font-size:10pt; font-weight:400; font-style:normal;&quot;&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;There is no visualization panel currently loaded into the workspace.&lt;br /&gt;Add a new one by clicking on the button above&lt;br/&gt;or using the [+ Add panel] button&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             <string>&lt;p&gt;&lt;b&gt;There is no visualization panel currently loaded into the workspace.&lt;br/&gt;Add a new one by clicking on the button above&lt;br/&gt;or using the [+ Add panel] button&lt;/b&gt;&lt;/p&gt;</string>
             </property>
             <property name="alignment">
              <set>Qt::AlignCenter</set>
@@ -972,22 +969,6 @@ p, li { white-space: pre-wrap; }
     <hint type="sourcelabel">
      <x>470</x>
      <y>634</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>543</x>
-     <y>318</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>exposeButton</sender>
-   <signal>clicked(bool)</signal>
-   <receiver>Workspace</receiver>
-   <slot>expose(bool)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>32</x>
-     <y>623</y>
     </hint>
     <hint type="destinationlabel">
      <x>543</x>

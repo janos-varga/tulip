@@ -468,9 +468,6 @@ PythonCodeEditor::PythonCodeEditor(QWidget *parent)
   _currentFont.setPointSize(8);
 #endif
 
-  setStyleSheet("QFrame { background-color: white; }"
-                "QPlainTextEdit { selection-background-color: #C0C0C0; }");
-
   format.setFont(_currentFont);
   setCurrentCharFormat(format);
 
@@ -1660,11 +1657,11 @@ bool PythonCodeEditor::loadCodeFromFile(const QString &filePath) {
 
   if (filePath == getFileName() && !toPlainText().isEmpty()) {
     if (scriptCode != getCleanCode() &&
-        QMessageBox::question(
-            nullptr, "File changed on disk",
-            QString("The file ") + filePath +
-                " has been modified by another editor. Do you want to reload it ?",
-            QMessageBox::Yes | QMessageBox::No, QMessageBox::Yes) == QMessageBox::Yes) {
+        QMessageBox::question(nullptr, "File changed on disk",
+                              QString("The file ") + filePath +
+                                  " has been modified by another editor. Do you want to reload it?",
+                              QMessageBox::Yes | QMessageBox::No,
+                              QMessageBox::Yes) == QMessageBox::Yes) {
       setPlainText(scriptCode);
     } else {
       return false;

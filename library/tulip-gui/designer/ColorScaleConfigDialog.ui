@@ -13,11 +13,6 @@
   <property name="windowTitle">
    <string>Color Scale Configuration</string>
   </property>
-  <property name="styleSheet">
-    <string notr="true">
-      QFrame { background-color: white; }
-    </string>
-  </property>
   <layout class="QVBoxLayout" name="verticalLayout_7">
    <property name="margin">
     <number>3</number>
@@ -52,7 +47,7 @@
             <item>
              <widget class="QLabel" name="label">
               <property name="text">
-               <string>Number of colors :</string>
+               <string>Number of colors:</string>
               </property>
              </widget>
             </item>

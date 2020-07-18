@@ -21,11 +21,13 @@
 #include "ui_NeighborhoodHighlighterConfigWidget.h"
 
 #include <tulip/TlpQtTools.h>
+#include <tulip/Interactor.h>
 
 using namespace tlp;
 
 NeighborhoodHighlighterConfigWidget::NeighborhoodHighlighterConfigWidget(QWidget *parent)
-    : QWidget(parent), _ui(new Ui::NeighborhoodHighlighterConfigWidgetData) {
+    : QWidget(parent), _ui(new Ui::NeighborhoodHighlighterConfigWidget) {
+  Interactor::setupConfigWidget(this);
   _ui->setupUi(this);
 }
 
