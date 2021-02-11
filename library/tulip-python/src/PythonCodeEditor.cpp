@@ -23,6 +23,7 @@
 #include "tulip/ParenMatcherHighlighter.h"
 
 #include <tulip/Perspective.h>
+#include <tulip/TulipSettings.h>
 
 #include <QTextStream>
 #include <QPainter>
@@ -468,6 +469,7 @@ PythonCodeEditor::PythonCodeEditor(QWidget *parent)
   _currentFont.setPointSize(8);
 #endif
 
+  _darkBackground = TulipSettings::isDisplayInDarkMode();
   format.setFont(_currentFont);
   setCurrentCharFormat(format);
 
@@ -478,7 +480,7 @@ PythonCodeEditor::PythonCodeEditor(QWidget *parent)
   updateLineNumberAreaWidth();
 
   _parenHighlighter = new ParenMatcherHighlighter(document());
-  _highlighter = new PythonCodeHighlighter(document());
+  _highlighter = new PythonCodeHighlighter(document(), _darkBackground);
 
   if (_autoCompletionList == nullptr) {
     _autoCompletionList = new AutoCompletionList();
@@ -585,7 +587,7 @@ void PythonCodeEditor::resizeEvent(QResizeEvent *e) {
 
 void PythonCodeEditor::lineNumberAreaPaintEvent(QPaintEvent *event) {
   QPainter painter(_lineNumberArea);
-  painter.fillRect(event->rect(), Qt::lightGray);
+  painter.fillRect(event->rect(), QColor("silver"));
 
   QTextBlock block = firstVisibleBlock();
   int blockNumber = block.blockNumber();
@@ -689,7 +691,8 @@ void PythonCodeEditor::paintEvent(QPaintEvent *event) {
     QRect tooltipRect(tPos, tPos + QPoint(width + 2 * charWidth(' '), height));
 #endif
     painter.drawRect(tooltipRect);
-    painter.fillRect(tooltipRect, QColor(249, 251, 100, 200));
+    painter.fillRect(tooltipRect, QColor("#FFFFD3"));
+    painter.setPen(Qt::black);
 #ifndef __APPLE__
     painter.drawText(tooltipRect, _toolTipText);
 #else
@@ -894,7 +897,7 @@ void PythonCodeEditor::highlightCurrentLine() {
 
   if (highlightEditedLine() && !isReadOnly() && selectedText().isEmpty()) {
     QTextEdit::ExtraSelection selection;
-    QColor lineColor = QColor(Qt::yellow).lighter(160);
+    QColor lineColor(_darkBackground ? "#D0D0D0" : "#D8D8D8");
     selection.format = textCursor().block().charFormat();
     selection.format.setBackground(lineColor);
     selection.format.setProperty(QTextFormat::FullWidthSelection, true);
@@ -914,10 +917,10 @@ void PythonCodeEditor::highlightSelection() {
     findFlags |= QTextDocument::FindCaseSensitively;
     findFlags |= QTextDocument::FindWholeWords;
     QTextCursor cursor = document()->find(text, QTextCursor(document()->begin()), findFlags);
+    QColor lineColor = QColor(_darkBackground ? "#D0D0D0" : "#D8D8D8").darker(110);
 
     while (!cursor.isNull()) {
       QTextEdit::ExtraSelection selection;
-      QColor lineColor = QColor(Qt::yellow);
       selection.format = cursor.block().charFormat();
       selection.format.setBackground(lineColor);
       selection.cursor = cursor;
@@ -932,7 +935,7 @@ void PythonCodeEditor::highlightSelection() {
 void PythonCodeEditor::createParenSelection(int pos) {
   QList<QTextEdit::ExtraSelection> selections = extraSelections();
   QTextEdit::ExtraSelection selection;
-  selection.format.setForeground(Qt::red);
+  selection.format.setForeground(QColor("#FFAB00"));
   QTextCursor cursor = textCursor();
   cursor.setPosition(pos);
   cursor.movePosition(QTextCursor::NextCharacter, QTextCursor::KeepAnchor);
@@ -949,7 +952,7 @@ void PythonCodeEditor::highlightErrors() {
     QTextBlock block = document()->findBlockByNumber(_currentErrorLines.at(i));
     selection.format = block.charFormat();
     selection.format.setUnderlineStyle(QTextCharFormat::WaveUnderline);
-    selection.format.setUnderlineColor(Qt::red);
+    selection.format.setUnderlineColor(QColor("#D51A1A"));
     selection.cursor = QTextCursor(block);
     selection.cursor.select(QTextCursor::LineUnderCursor);
     selections.append(selection);
@@ -1657,7 +1660,7 @@ bool PythonCodeEditor::loadCodeFromFile(const QString &filePath) {
 
   if (filePath == getFileName() && !toPlainText().isEmpty()) {
     if (scriptCode != getCleanCode() &&
-        QMessageBox::question(nullptr, "File changed on disk",
+        QMessageBox::question(QApplication::activeWindow(), "File changed on disk",
                               QString("The file ") + filePath +
                                   " has been modified by another editor. Do you want to reload it?",
                               QMessageBox::Yes | QMessageBox::No,

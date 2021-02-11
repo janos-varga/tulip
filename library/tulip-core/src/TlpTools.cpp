@@ -29,12 +29,19 @@
 #include <chrono>
 
 #ifndef _WIN32
+#include <sys/stat.h>
 #include <unistd.h>
+#include <gzstream.h>
 #endif
 
 #ifdef _WIN32
 #include <windows.h>
 #include <utf8.h>
+// msys2 build hack
+#define __CRT__NO_INLINE
+#include <gzstream.h>
+#undef __CRT__NO_INLINE
+
 #ifdef _MSC_VER
 #include <dbghelp.h>
 #endif
@@ -46,7 +53,6 @@
 #include <dlfcn.h>
 #endif
 
-#include <gzstream.h>
 #include <tulip/TulipException.h>
 #include <tulip/TlpTools.h>
 #include <tulip/Plugin.h>
@@ -154,9 +160,7 @@ static void checkDirectory(std::string dir, bool tlpDirSet, bool throwEx) {
   if (dir[dir.length() - 1] == '/')
     dir.erase(dir.length() - 1);
 
-  tlp_stat_t infoEntry;
-
-  if (statPath(dir, &infoEntry) != 0) {
+  if (!pathExist(dir)) {
     std::stringstream ess;
     ess << "Error - " << dir << ":" << std::endl << strerror(errno) << std::endl;
     if (tlpDirSet)
@@ -251,8 +255,7 @@ void tlp::initTulipLib(const char *appDirPath) {
 #ifndef _WIN32
   // special case for Debian when Tulip install prefix is /usr
   // as libraries are installed in <prefix>/lib/<arch>
-  tlp_stat_t statInfo;
-  if (statPath(curDir, &statInfo) != 0) {
+  if (!pathExist(curDir)) {
     pos = TulipLibDir.rfind("/", pos - 1);
     curDir = TulipLibDir.substr(0, pos + 1) + "share/tulip/";
   }
@@ -403,13 +406,15 @@ double tlp::randomDouble(double max) {
 
 //=========================================================
 
-int tlp::statPath(const std::string &pathname, tlp_stat_t *buf) {
+bool tlp::pathExist(const std::string &pathname) {
 #ifndef WIN32
-  return stat(pathname.c_str(), buf);
+  struct stat info;
+  return stat(pathname.c_str(), &info) == 0;
 #else
+  struct _stat info;
   std::wstring utf16pathname;
   utf8::utf8to16(pathname.begin(), pathname.end(), std::back_inserter(utf16pathname));
-  return _wstat(utf16pathname.c_str(), buf);
+  return _wstat(utf16pathname.c_str(), &info) == 0;
 #endif
 }
 

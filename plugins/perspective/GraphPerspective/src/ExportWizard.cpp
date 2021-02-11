@@ -35,8 +35,22 @@ using namespace std;
 
 ExportWizard::ExportWizard(Graph *g, const QString &exportFile, QWidget *parent)
     : QWizard(parent), _ui(new Ui::ExportWizard), _graph(g) {
+#if !defined(__LINUX)
+  setWizardStyle(QWizard::ClassicStyle);
+#endif
+
   _ui->setupUi(this);
   button(QWizard::FinishButton)->setEnabled(false);
+
+  bool darkBackground =
+      _ui->exportModules->palette().color(backgroundRole()) != QColor(255, 255, 255);
+  // update foreground colors according to background color
+  if (darkBackground) {
+    auto ss = _ui->exportModules->styleSheet();
+    ss.replace("black", "white");
+    _ui->exportModules->setStyleSheet(ss);
+    _ui->parameters->setStyleSheet("QHeaderView::section { color: white }");
+  }
 
   PluginModel<tlp::ExportModule> *model = new PluginModel<tlp::ExportModule>(_ui->exportModules);
 
@@ -56,6 +70,12 @@ ExportWizard::ExportWizard(Graph *g, const QString &exportFile, QWidget *parent)
   _ui->parametersFrame->hide();
   updateFinishButton();
 
+  // Help button is used to display export plugin doc
+  // as soon as an import plugin is selected
+  auto helpButton = button(QWizard::HelpButton);
+  helpButton->setVisible(false);
+  connect(helpButton, SIGNAL(clicked(bool)), this, SLOT(helpButtonClicked()));
+
   _ui->pathEdit->setText(exportFile);
 }
 
@@ -72,8 +92,12 @@ void ExportWizard::algorithmSelected(const QModelIndex &index) {
   QAbstractItemModel *newModel = nullptr;
 
   if (PluginLister::pluginExists(algs)) {
+    _index = &index;
     newModel = new ParameterListModel(PluginLister::getPluginParameters(algs), _graph);
-  }
+    setButtonText(QWizard::HelpButton, QString("%1 documentation").arg(alg));
+    button(QWizard::HelpButton)->setVisible(true);
+  } else
+    button(QWizard::HelpButton)->setVisible(true);
 
   _ui->parameters->setModel(newModel);
 
@@ -187,6 +211,12 @@ void ExportWizard::browseButtonClicked() {
   if (!exportFile.isEmpty()) {
     _ui->pathEdit->setText(exportFile);
   }
+}
+
+void ExportWizard::helpButtonClicked() {
+  // display current import plugin documentation
+  QMessageBox::information(this, _index->data().toString().append(" documentation"),
+                           _index->data(Qt::ToolTipRole).toString());
 }
 
 bool ExportWizard::validateCurrentPage() {

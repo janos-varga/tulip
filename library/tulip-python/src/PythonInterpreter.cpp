@@ -252,7 +252,9 @@ PythonInterpreter::PythonInterpreter()
 
     PySys_SetArgv(argc, argv);
 
+#if PY_MAJOR_VERSION == 3 && PY_MINOR_VERSION < 9
     PyEval_InitThreads();
+#endif
     mainThreadState = PyEval_SaveThread();
   }
 
@@ -650,7 +652,7 @@ bool PythonInterpreter::runGraphScript(const QString &module, const QString &fun
   if (PyCallable_Check(pFunc)) {
 
     if (sipAPI() == nullptr) {
-      QMessageBox::critical(nullptr, "Failed to initialize Python",
+      QMessageBox::critical(QApplication::activeWindow(), "Failed to initialize Python",
                             "SIP could not be initialized (sipApi is null)");
       return false;
     }

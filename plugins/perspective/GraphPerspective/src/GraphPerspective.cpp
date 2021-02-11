@@ -111,8 +111,7 @@ static bool tulipCanOpenFile(const QString &path) {
 }
 
 GraphPerspective::GraphPerspective(const tlp::PluginContext *c)
-    : Perspective(c), _ui(nullptr), _graphs(new GraphHierarchiesModel(this)),
-      _recentDocumentsSettingsKey("perspective/recent_files"), _logger(nullptr),
+    : Perspective(c), _ui(nullptr), _graphs(new GraphHierarchiesModel(this)), _logger(nullptr),
       _searchDialog(nullptr) {
   Q_INIT_RESOURCE(GraphPerspective);
 
@@ -159,7 +158,7 @@ void GraphPerspective::reserveDefaultProperties() {
 void GraphPerspective::buildRecentDocumentsMenu() {
   _ui->menuOpen_recent_file->clear();
 
-  for (const QString &s : TulipSettings::instance().recentDocuments()) {
+  for (const QString &s : TulipSettings::recentDocuments()) {
     if (!QFileInfo(s).exists() || !tulipCanOpenFile(s))
       continue;
 
@@ -170,8 +169,7 @@ void GraphPerspective::buildRecentDocumentsMenu() {
 
   _ui->menuOpen_recent_file->addSeparator();
 
-  for (const QString &s :
-       TulipSettings::instance().value(_recentDocumentsSettingsKey).toStringList()) {
+  for (const QString &s : TulipSettings::recentPerspectiveFiles()) {
     if (!QFileInfo(s).exists() || !tulipCanOpenFile(s))
       continue;
 
@@ -183,7 +181,7 @@ void GraphPerspective::buildRecentDocumentsMenu() {
 }
 
 void GraphPerspective::addRecentDocument(const QString &path) {
-  QStringList recents = TulipSettings::instance().value(_recentDocumentsSettingsKey).toStringList();
+  QStringList recents = TulipSettings::recentPerspectiveFiles();
 
   if (recents.contains(path) || !tulipCanOpenFile(path)) {
     return;
@@ -194,8 +192,8 @@ void GraphPerspective::addRecentDocument(const QString &path) {
   if (recents.size() > 10)
     recents.pop_front();
 
-  TulipSettings::instance().setValue(_recentDocumentsSettingsKey, recents);
-  TulipSettings::instance().sync();
+  TulipSettings::setRecentPerspectiveFiles(recents);
+  TulipSettings::synchronizeSettings();
   buildRecentDocumentsMenu();
 }
 
@@ -270,7 +268,7 @@ void GraphPerspective::logMessage(QtMsgType type, const QMessageLogContext &cont
       std::cout << QStringToTlpString(msg) << std::endl;
     else
       std::cerr << QStringToTlpString(msg) << std::endl;
-    // redirect to GraphPerpectiveLogger
+    // redirect to GraphPerspectiveLogger
     _logger->log(type, context, msg, false);
   }
 
@@ -336,6 +334,7 @@ bool GraphPerspective::terminated() {
         QMessageBox::Yes | QMessageBox::No | QMessageBox::Cancel | QMessageBox::Escape);
 
     if ((answer == QMessageBox::Yes && !save()) || (answer == QMessageBox::Cancel)) {
+      _restartNeeded = false;
       return false;
     }
   }
@@ -510,8 +509,280 @@ void GraphPerspective::buildPythonIDE() {
 
 void GraphPerspective::start(tlp::PluginProgress *progress) {
   reserveDefaultProperties();
+  // configure style sheet
+  QString s_sheet(R"(
+#AboutTulipPageWidget, #AboutTulipPageWidget QTextEdit, #AlgorithmRunner, #AlgorithmRunner #contents, tlp--AlgorithRunnerItem, #ElementInformationWidget, #interactorConfigWidget, #interactorConfigWidgetDoc, #interactorConfigWidgetOptions, #mainWidget, #stringsListSelectionWidget, #TableViewWidget, QAbstractItemView, QCheckBox, QDialog, QHeaderView::section, QMessageBox, QRadioButton, QStackedWidget, QTabBar::tab, QTableView QTableCornerButton::section, QTextBrowser, QWizard, QWizard > * { background-color: %BG_COLOR%; }
+
+#AxisSlidersOptions { background-color: %BG_COLOR%; }
+
+#HeaderFrameData QComboBox QAbstractItemView {
+background-color: %BG_COLOR%;
+color: %FG_COLOR%;
+border: 1px solid #C9C9C9;
+}
+
+#parameters {
+color: black;
+font: 12px;
+}
+
+#parameters QHeaderView::section {
+background-color: %BG_COLOR%;
+padding-top: -1px;
+padding-left: 4px;
+padding-right: 4px;
+font: bold 12px;
+}
+
+#PreferencesDialog QHeaderView::section {
+height: 30px;
+font: bold 12px;
+color: %FG_COLOR%;
+border: 0px;
+}
+
+#PropertiesEditor QCheckBox::indicator:checked, QTableView::indicator:checked {
+image: url(:/tulip/gui/icons/eye-%FG_COLOR%.png);
+}
+
+#PropertiesEditor QCheckBox::indicator:indeterminate {
+image: url(:/tulip/gui/icons/eye_partially_disabled-%FG_COLOR%.png);
+}
+
+#PropertiesEditor QCheckBox::indicator:unchecked, QTableView::indicator:unchecked {
+image: url(:/tulip/gui/icons/eye_disabled-%FG_COLOR%.png);
+}
+
+#scrollArea, #scrollAreaWidgetContents {
+background-color: %BG_COLOR%;
+border: 0px;
+}
+
+#SearchWidget QTableView {
+border: 1px solid #C9C9C9;
+color: %FG_COLOR%;
+font: 12px;
+}
+
+#AboutTulipPageWidget QTextEdit:enabled, #ElementInformationWidget, #ElementInformationWidget QPushButton, #PanelSelectionWizard QListView, QComboBox QAbstractItemView:enabled, QComboBox:item:enabled, QCheckBox:enabled, QGroupBox:enabled, QHeaderView::section:enabled, QLabel:enabled, QListWidget:enabled, QRadioButton:enabled, QTabBar::tab:enabled, QTableWidget:enabled, QTableView:enabled, QTextBrowser:enabled, QToolButton:enabled, QTreeView:enabled {
+color: %FG_COLOR%;
+}
+
+QLineEdit[clearableLineEdit] {
+border: 1px solid #808080;
+background-color: white;
+color: black;
+}
+
+QHeaderView::down-arrow {
+image: url(:/tulip/gui/ui/down_arrow-%FG_COLOR%.png);
+}
+
+QHeaderView::up-arrow {
+image: url(:/tulip/gui/ui/up_arrow-%FG_COLOR%.png);
+}
+
+QListView, QTableView, QTreeView {
+alternate-background-color: #A0A0A0;
+}
+
+QPlainTextEdit {
+background-color: %BG_COLOR%;
+color: %FG_COLOR%;
+selection-background-color: #C0C0C0;
+}
+
+QPushButton, QComboBox {
+color: black;
+}
+
+QPushButton, QComboBox {
+border-image: url(:/tulip/gui/ui/btn_26.png) 4;
+border-width: 4;
+padding: 0px 6px;
+font-size: 12px;
+}
+
+QPushButton::flat {
+border-width: 0;
+background-color: transparent;
+}
+
+QPushButton:hover {
+border-image: url(:/tulip/gui/ui/btn_26_hover.png) 4;
+border-width: 4;
+}
+
+QComboBox:hover, QToolButton:hover {
+border-image: url(:/tulip/gui/ui/btn_26_hover.png) 4;
+}
+
+QPushButton:disabled, QComboBox::disabled, QToolButton::disabled {
+color:gray;
+}
+
+QPushButton:pressed, QToolButton:pressed{
+border-image: url(:/tulip/gui/ui/btn_26_pressed.png) 4;
+}
+
+QPushButton::menu-indicator{
+subcontrol-origin: margin;
+subcontrol-position: center right;
+right: 4px;
+}
+
+QPushButton {
+outline: none;
+margin: 2
+}
+
+QComboBox::down-arrow {
+image: url(:/tulip/gui/ui/combobox_arrow.png);
+}
+
+QComboBox:drop-down {
+subcontrol-origin: padding;
+subcontrol-position: top right;
+border-left-style: none;
+border-top-right-radius: 1px;
+border-bottom-right-radius: 1px;
+}
+
+#bottomFrame * {
+font: bold 11px;
+}
+
+#bottomFrame {
+border-top: 1px solid black;
+border-bottom: 1px solid rgba(117,117,117,255);
+border-right: 1px solid rgba(117,117,117,255);
+border-left: 0px;
+background-color: qlineargradient(spread:pad, x1:0, y1:0, x2:, y2:1,
+stop:0 rgb(75,75,75),
+stop:1 rgb(60,60,60));
+}
+
+#bottomFrame QPushButton, #bottomFrame QLabel, #bottomFrame QToolButton {
+color: white;
+}
+
+#bottomFrame QPushButton, #bottomFrame QToolButton {
+border: 0px;
+border-image: none;
+}
+
+#bottomFrame QPushButton:hover, #bottomFrame QToolButton:hover {
+background-color: qlineargradient(spread:pad, x1:0, y1:0, x2:, y2:1,
+stop:0 rgb(85,85,85),
+stop:1 rgb(70,70,70));
+}
+
+#bottomFrame QPushButton:pressed, #bottomFrame .QPushButton:checked, #bottomFrame QToolButton:pressed {
+background-color: qlineargradient(spread:pad, x1:0, y1:0, x2:, y2:1,
+stop:0 rgb(65,65,65),
+stop:1 rgb(50,50,50));
+}
+
+#bottomFrame OutputPanelButton{
+border-image: url(:/tulip/graphperspective/ui/panel_button.png) 2 2 2 19;
+border-width: 2px 2px 2px 19px;
+padding-left: -17;
+padding-right: 4;
+}
+
+#bottomFrame OutputPanelButton:checked{
+border-image: url(:/tulip/graphperspective/ui/panel_button_checked.png) 2 2 2 19
+}
+
+#bottomFrame OutputPanelButton::menu-indicator{
+width:0; height:0
+}
+
+#bottomFrame OutputPanelButton:checked:hover{
+border-image: url(:/tulip/graphperspective/ui/panel_button_checked_hover.png) 2 2 2 19
+}
+
+#bottomFrame OutputPanelButton:pressed:hover{
+border-image: url(:/tulip/graphperspective/ui/panel_button_pressed.png) 2 2 2 19
+}
+
+#bottomFrame OutputPanelButton:hover{
+border-image: url(:/tulip/graphperspective/ui/panel_button_hover.png) 2 2 2 19
+}
+
+#bottomFrame QToolButton {
+font: bold 10px;
+height:20px;
+}
+
+QFrame[ section=\"true\" ] {
+border-top: 1px solid #D9D9D9;
+padding-top: 20px;
+}
+
+QLabel[groupTitle] {
+background-color: #A0A0A0;
+font-weight: bold;
+}
+
+QSplitter::handle {
+background-color: #C0C0C0;
+border-width:0px;
+}
+
+QScrollBar {
+background-color: #D0D0D0;
+}
+
+QScrollBar::sub-page, QScrollBar::add-page {
+background-color: #A0A0A0;
+}
+
+QTableWidget, QTableView {
+gridline-color: #808080;
+}
+
+QTabBar::tab {
+background: #A0A0A0;
+border: 1px solid #808080;
+border-top-left-radius: 2px;
+border-top-right-radius: 2px;
+font-weight: 100;
+min-width: 8ex;
+padding: 5px;
+}
+
+QTabBar::tab:selected {
+background: %BG_COLOR%;
+margin-bottom: -1px;
+font-weight: normal;
+}
+
+QTabBar::tab:!selected:hover {
+background: #D0D0D0;
+font-weight: 300;
+}
+
+QTabBar::tab:disabled {
+color: #808080;
+}
+
+QTabWidget::pane {
+background: #808080;
+padding: 1px;
+top: -1px;
+}
+)");
+
+  if (TulipSettings::isDisplayInDarkMode())
+    s_sheet.replace("%BG_COLOR%", "#323232").replace("%FG_COLOR%", "white");
+  else
+    s_sheet.replace("%BG_COLOR%", "white").replace("%FG_COLOR%", "black");
+  _mainWindow->setStyleSheet(s_sheet);
+
   _ui = new Ui::GraphPerspectiveMainWindowData;
   _ui->setupUi(_mainWindow);
+
 #ifdef TULIP_BUILD_PYTHON_COMPONENTS
   // ensure the loading of python plugins
   // before instantiating PythonIDE
@@ -532,8 +803,7 @@ void GraphPerspective::start(tlp::PluginProgress *progress) {
       "Save the current project (current graphs with current views) in the attached file", "S");
   SET_TOOLTIP_WITH_CTRL_SHORTCUT(_ui->actionSave_Project_as, "Save Project as a new file name",
                                  "Shift+S");
-  SET_TOOLTIP_WITH_CTRL_SHORTCUT(_ui->actionImport, "Display the Graph importing wizard",
-                                 "Shift+O");
+  SET_TOOLTIP_WITH_CTRL_SHORTCUT(_ui->actionImport, "Display the Graph import wizard", "Shift+O");
   SET_TOOLTIP_WITH_CTRL_SHORTCUT(_ui->actionExit, "Exit from Tulip perspective", "Q");
   SET_TOOLTIP_WITH_CTRL_SHORTCUT(_ui->actionUndo, "Undo the latest update of the current graph",
                                  "Z");
@@ -594,10 +864,10 @@ void GraphPerspective::start(tlp::PluginProgress *progress) {
   _ui->loggerMessageWarning->setToolTip(_ui->loggerMessageInfo->toolTip());
   _ui->loggerMessageError->setToolTip(_ui->loggerMessageInfo->toolTip());
   SET_TIPS(_ui->csvImportButton, "Import data in the current graph using a csv formatted file");
-  SET_TIPS(_ui->importButton, "Display the Graph importing wizard");
+  SET_TIPS(_ui->importButton, "Display the Graph import wizard");
   SET_TIPS(_ui->pluginsButton, "Display the Plugin center");
-  SET_TIPS(_ui->sidebarButton, "Hide Sidebar");
-  SET_TIPS(_ui->menubarButton, "Hide Menubar");
+  SET_TIPS(_ui->sidebarButton, "Hide the Algorithms/Graphs panels");
+  SET_TIPS(_ui->menubarButton, "Hide the menu bar");
   SET_TIPS(_ui->singleModeButton, "Switch to 1 panel mode");
   SET_TIPS(_ui->splitModeButton, "Switch to 2 panels mode");
   SET_TIPS(_ui->splitHorizontalModeButton, "Switch to 2 panels mode");
@@ -692,7 +962,7 @@ void GraphPerspective::start(tlp::PluginProgress *progress) {
   Perspective::redirectStatusTipOfMenu(_ui->menuHelp);
   Perspective::redirectStatusTipOfMenu(_ui->menuWindow);
 
-  TulipSettings::instance().synchronizeViewSettings();
+  TulipSettings::synchronizeViewSettings();
 
   qInstallMessageHandler(Perspective::showLogMessage);
 
@@ -748,6 +1018,7 @@ void GraphPerspective::start(tlp::PluginProgress *progress) {
   connect(_ui->actionSearch, SIGNAL(triggered()), this, SLOT(showSearchDialog()));
   connect(_ui->workspace, SIGNAL(importGraphRequest()), this, SLOT(importGraph()));
   connect(_ui->action_Remove_All, SIGNAL(triggered()), _ui->workspace, SLOT(closeAll()));
+  connect(_ui->workspace, SIGNAL(panelsEmpty()), this, SLOT(panelsEmpty()));
   _ui->addPanelButton->setDefaultAction(_ui->actionCreate_panel);
   connect(_ui->actionColor_scales_management, SIGNAL(triggered()), this,
           SLOT(displayColorScalesDialog()));
@@ -837,6 +1108,10 @@ void GraphPerspective::start(tlp::PluginProgress *progress) {
   _ui->pluginsButton->hide();
   _ui->menuHelp->removeAction(_ui->actionPlugins_Center);
 #else
+#if defined(__APPLE__)
+  // the menu cannot be hidden on Mac
+  _ui->menubarButton->hide();
+#endif
   // show the 'Plugins center' menu entry and button only if connected to the Tulip agent
   _ui->pluginsButton->setVisible(checkSocketConnected());
   _ui->actionPlugins_Center->setVisible(checkSocketConnected());
@@ -850,13 +1125,17 @@ void GraphPerspective::start(tlp::PluginProgress *progress) {
   // for former user who has never launched Tulip 5.3
   // we show a message to ask him if he wants to use
   // tlpb as default graph file format
-  if (TulipSettings::instance().isFirstTulipMMRun() &&
-      !TulipSettings::instance().userHasLaunchedTulipMM("5.3") &&
-      !TulipSettings::instance().isFirstRun() && !TulipSettings::instance().isUseTlpbFileFormat()) {
+  if (TulipSettings::isFirstTulipMMRun() && !TulipSettings::userHasLaunchedTulipMM("5.3") &&
+      !TulipSettings::isFirstRun() && !TulipSettings::isUseTlpbFileFormat()) {
     QTimer::singleShot(500, this, SLOT(showStartMessage()));
   }
 
   logCleared();
+}
+
+void GraphPerspective::panelsEmpty() {
+  _ui->actionExposePanels->setEnabled(false);
+  _ui->action_Remove_All->setEnabled(false);
 }
 
 void GraphPerspective::showStartMessage() {
@@ -869,7 +1148,7 @@ void GraphPerspective::showStartMessage() {
               "choose this format, but you can click on <b>Apply</b>, if you want to use it as of "
               "now for the save of graphs in your project files.</p></body></html>"),
           QMessageBox::Apply | QMessageBox::Close, QMessageBox::Close) == QMessageBox::Apply)
-    TulipSettings::instance().setUseTlpbFileFormat(true);
+    TulipSettings::setUseTlpbFileFormat(true);
 }
 
 void GraphPerspective::openExternalFile() {
@@ -928,11 +1207,11 @@ void GraphPerspective::exportGraph(Graph *g) {
                               tlp::tlpStringToQString(prg->getError()) + "</b>");
   } else {
     // log export plugin call
-    if (TulipSettings::instance().logPluginCall() != TulipSettings::NoLog) {
+    if (TulipSettings::logPluginCall() != TulipSettings::NoLog) {
       std::stringstream log;
       log << exportPluginName.c_str() << " - " << data.toString().c_str();
 
-      if (TulipSettings::instance().logPluginCall() == TulipSettings::LogCallWithExecutionTime)
+      if (TulipSettings::logPluginCall() == TulipSettings::LogCallWithExecutionTime)
         log << ": " << start.msecsTo(QTime::currentTime()) << "ms";
 
       qDebug() << log.str().c_str();
@@ -994,11 +1273,11 @@ void GraphPerspective::importGraph(const std::string &module, DataSet &data) {
     delete prg;
 
     // log import plugin call
-    if (TulipSettings::instance().logPluginCall() != TulipSettings::NoLog) {
+    if (TulipSettings::logPluginCall() != TulipSettings::NoLog) {
       std::stringstream log;
       log << module.c_str() << " import - " << data.toString().c_str();
 
-      if (TulipSettings::instance().logPluginCall() == TulipSettings::LogCallWithExecutionTime)
+      if (TulipSettings::logPluginCall() == TulipSettings::LogCallWithExecutionTime)
         log << ": " << start.msecsTo(QTime::currentTime()) << "ms";
 
       qDebug() << log.str().c_str();
@@ -1119,7 +1398,7 @@ bool GraphPerspective::saveAs(const QString &path) {
   bool ret = _project->write(path, &progress);
 
   if (ret)
-    TulipSettings::instance().addToRecentDocuments(path);
+    TulipSettings::addToRecentDocuments(path);
 
   return ret;
 }
@@ -1178,7 +1457,7 @@ void GraphPerspective::open(QString fileName) {
     for (const std::string &extension : modules.keys()) {
       if (fileName.endsWith(".tlpx")) {
         openProjectFile(fileName);
-        TulipSettings::instance().addToRecentDocuments(fileInfo.absoluteFilePath());
+        TulipSettings::addToRecentDocuments(fileInfo.absoluteFilePath());
         break;
       } else if (fileName.endsWith(QString::fromStdString(extension))) {
         DataSet params;
@@ -1213,12 +1492,12 @@ void GraphPerspective::openProjectFile(const QString &path) {
   }
 }
 
-#ifdef TULIP_BUILD_PYTHON_COMPONENTS
 void GraphPerspective::initPythonIDE() {
+#ifdef TULIP_BUILD_PYTHON_COMPONENTS
   buildPythonIDE();
   _pythonIDE->setProject(_project);
-}
 #endif
+}
 
 void GraphPerspective::deleteSelectedElementsFromRootGraph() {
   deleteSelectedElements(true);
@@ -1418,7 +1697,7 @@ void GraphPerspective::group() {
   bool changeGraph = false;
 
   if (graph == graph->getRoot()) {
-    qWarning() << "[Group] Grouping can not be done on the root graph. A subgraph has "
+    qWarning() << "[Group] Grouping cannot be done on the root graph. A subgraph has "
                   "automatically been created";
     graph = graph->addCloneSubGraph("groups");
     changeGraph = true;
@@ -1549,6 +1828,7 @@ void GraphPerspective::currentGraphChanged(Graph *graph) {
   }
 
   _ui->actionExposePanels->setEnabled(!_ui->workspace->empty());
+  _ui->action_Remove_All->setEnabled(!_ui->workspace->empty());
 
 #ifdef TULIP_BUILD_PYTHON_COMPONENTS
 
@@ -1641,7 +1921,7 @@ void GraphPerspective::CSVImport() {
 }
 
 void GraphPerspective::showStartPanels(Graph *g) {
-  if (TulipSettings::instance().displayDefaultViews() == false)
+  if (TulipSettings::displayDefaultViews() == false)
     return;
 
   // expose mode is not safe to add a new panel
@@ -1707,6 +1987,11 @@ void GraphPerspective::closePanelsForGraph(tlp::Graph *g) {
       _ui->workspace->delView(v);
     }
   }
+
+  if (_ui->workspace->empty()) {
+    _ui->actionExposePanels->setEnabled(false);
+    _ui->action_Remove_All->setEnabled(false);
+  }
 }
 
 bool GraphPerspective::setGlMainViewPropertiesForGraph(
@@ -1755,23 +2040,36 @@ void GraphPerspective::showSearchDialog(bool f) {
 }
 
 void GraphPerspective::openPreferences() {
+  bool darkMode = TulipSettings::isDisplayInDarkMode();
   PreferencesDialog dlg(_ui->mainWidget);
   dlg.readSettings();
 
   if (dlg.exec() == QDialog::Accepted) {
     dlg.writeSettings();
 
-    for (auto v : _ui->workspace->panels()) {
-      GlMainView *glMainView = dynamic_cast<tlp::GlMainView *>(v);
+    _restartNeeded = darkMode != TulipSettings::isDisplayInDarkMode();
+    if (_restartNeeded)
+      _restartNeeded =
+          QMessageBox::question(_mainWindow, "Display mode update",
+                                QString("The display mode cannot be updated until the next start "
+                                        "up.\nDo you want to restart now?"),
+                                QMessageBox::Yes | QMessageBox::No) == QMessageBox::Yes;
 
-      if (glMainView != nullptr) {
-        if (glMainView->getGlMainWidget() != nullptr) {
-          glMainView->getGlMainWidget()
-              ->getScene()
-              ->getGlGraphComposite()
-              ->getRenderingParametersPointer()
-              ->setSelectionColor(TulipSettings::instance().defaultSelectionColor());
-          glMainView->redraw();
+    if (_restartNeeded)
+      _mainWindow->close();
+    else {
+      for (auto v : _ui->workspace->panels()) {
+        GlMainView *glMainView = dynamic_cast<tlp::GlMainView *>(v);
+
+        if (glMainView != nullptr) {
+          if (glMainView->getGlMainWidget() != nullptr) {
+            glMainView->getGlMainWidget()
+                ->getScene()
+                ->getGlGraphComposite()
+                ->getRenderingParametersPointer()
+                ->setSelectionColor(TulipSettings::getDefaultSelectionColor());
+            glMainView->redraw();
+          }
         }
       }
     }
@@ -1787,9 +2085,12 @@ void GraphPerspective::pluginsListChanged() {
 }
 
 void GraphPerspective::addNewGraph() {
-  Graph *g = tlp::newGraph();
-  _graphs->addGraph(g);
-  showStartPanels(g);
+  DataSet ds;
+  this->importGraph(string("Empty graph"), ds);
+  // the code below causes random crash with QTreeView
+  //  Graph *g = tlp::newGraph();
+  //_graphs->addGraph(g);
+  // showStartPanels(g);
 }
 
 void GraphPerspective::newProject() {
@@ -1859,10 +2160,10 @@ void GraphPerspective::showAPIDocumentation() {
 void GraphPerspective::showHideSideBar() {
   if (_ui->docksWidget->isVisible()) {
     _ui->docksWidget->setVisible(false);
-    SET_TIPS(_ui->sidebarButton, "Show Sidebar");
+    SET_TIPS(_ui->sidebarButton, "Show the Algorithms/Graphs panels");
   } else {
     _ui->docksWidget->setVisible(true);
-    SET_TIPS(_ui->sidebarButton, "Hide Sidebar");
+    SET_TIPS(_ui->sidebarButton, "Hide the Algorithms/Graphs panels");
   }
 
   if (_logger->anchored()) {
@@ -1873,10 +2174,10 @@ void GraphPerspective::showHideSideBar() {
 void GraphPerspective::showHideMenuBar() {
   if (_mainWindow->menuBar()->isVisible()) {
     _mainWindow->menuBar()->setVisible(false);
-    SET_TIPS(_ui->menubarButton, "Show Menubar");
+    SET_TIPS(_ui->menubarButton, "Show the menu bar");
   } else {
     _mainWindow->menuBar()->setVisible(true);
-    SET_TIPS(_ui->menubarButton, "Hide Menubar");
+    SET_TIPS(_ui->menubarButton, "Hide the manu bar");
   }
 }
 

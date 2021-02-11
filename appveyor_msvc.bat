@@ -55,10 +55,10 @@ if "%TULIP_BUILD_CORE_ONLY%" == "0" (
 :install_complete_tulip_build_dependencies
 rem get, compile and install freetype
 cd C:/tulip_dependencies
-curl -LO http://download.savannah.gnu.org/releases/freetype/freetype-2.8.tar.gz
+curl -LO http://download.savannah.gnu.org/releases/freetype/freetype-2.10.2.tar.gz
 if %errorlevel% neq 0 exit /b %errorlevel%
-7z x freetype-2.8.tar.gz -so | 7z x -aoa -si -ttar
-cd freetype-2.8
+7z x freetype-2.10.2.tar.gz -so | 7z x -aoa -si -ttar
+cd freetype-2.10.2
 md build && cd build
 cmake -G "%CMAKE_VS_GENERATOR%" -DCMAKE_INSTALL_PREFIX="C:/tulip_dependencies" ..
 if %errorlevel% neq 0 exit /b %errorlevel%
@@ -67,10 +67,10 @@ if %errorlevel% neq 0 exit /b %errorlevel%
 
 rem get, compile and install glew
 cd C:/tulip_dependencies
-curl -LO https://sourceforge.mirrorservice.org/g/gl/glew/glew/2.1.0/glew-2.1.0.zip
+curl -L https://sourceforge.net/projects/glew/files/glew/2.2.0/glew-2.2.0.zip/download -o glew-2.2.0.zip
 if %errorlevel% neq 0 exit /b %errorlevel%
-7z x glew-2.1.0.zip
-cd glew-2.1.0/build/cmake
+7z x glew-2.2.0.zip
+cd glew-2.2.0/build/cmake
 cmake -G "%CMAKE_VS_GENERATOR%" -DCMAKE_INSTALL_PREFIX="C:/tulip_dependencies" .
 if %errorlevel% neq 0 exit /b %errorlevel%
 msbuild INSTALL.vcxproj /m /clp:ErrorsOnly /p:Configuration=Release %CLCACHE_MSBUILD_CONF%
@@ -83,7 +83,7 @@ goto tulip_build
 rem we are good to go, let's compile and install Tulip now
 cd %APPVEYOR_BUILD_FOLDER%
 md build && cd build
-cmake -G "%CMAKE_VS_GENERATOR%" -DCMAKE_INCLUDE_PATH="C:/tulip_dependencies/include" -DCMAKE_LIBRARY_PATH="C:/tulip_dependencies/lib;C:/tulip_dependencies/bin" -DCMAKE_PREFIX_PATH="%QT5_DIR%" -DPYTHON_EXECUTABLE="%PYTHON_EXECUTABLE%" -DTULIP_BUILD_CORE_ONLY=%TULIP_BUILD_CORE_ONLY% -DTULIP_BUILD_TESTS=ON ..
+cmake -G "%CMAKE_VS_GENERATOR%" -DCMAKE_INCLUDE_PATH="C:/tulip_dependencies/include" -DCMAKE_LIBRARY_PATH="C:/tulip_dependencies/lib;C:/tulip_dependencies/bin" -DCMAKE_PREFIX_PATH="%QT5_DIR%" -DPYTHON_EXECUTABLE="%PYTHON_EXECUTABLE%" -DTULIP_BUILD_CORE_ONLY=%TULIP_BUILD_CORE_ONLY% -DTULIP_BUILD_TESTS=ON -DTULIP_BUILD_DOC=OFF ..
 if %errorlevel% neq 0 exit /b %errorlevel%
 msbuild INSTALL.vcxproj /m /p:Configuration=Release %CLCACHE_MSBUILD_CONF%
 if %errorlevel% neq 0 exit /b %errorlevel%

@@ -27,7 +27,7 @@ Here are the components of Tulip Perspective's main window:
 
 |l_blu| Workspace view
 
-From this point and even if it is no fully correct, we will refer to the Tulip perspective by simply using the term Tulip. Differentiating one (Tulip perspective) from the other (Tulip agent) is quite simple as the perspective window proposes the visualization actions and the Tulip agent window only offers you to manage your plugins and to choose your project.
+From this point and even if it is no fully correct, we refer to the Tulip perspective by simply using the term Tulip. Differentiating one (Tulip perspective) from the other (Tulip agent) is quite simple as the perspective window proposes the visualization actions and the Tulip agent window only offers plugin management and choosing the project to open.
 
 
 .. _menu:
@@ -73,6 +73,8 @@ The vertical toolbar, on the left of the main window, contains 8 buttons:
 
 .. image:: _images/i_panels.png
 
+When overviews are displayed, you can then double-click on a panel icon to open it, click on the cross in the top-right corner of the icon to delete it, or click again on the **Panels** button to return to the views currently displayed in the workspace.
+
 * |icon_develop| **Python**: displays the Tulip python IDE (find more in :ref:`developer_view`).
 
 * |icon_search| **Search**: displays the Search dialog (find more in :ref:`search_dialog`).
@@ -103,13 +105,13 @@ Tulip proposes several ready-to-use algorithms, offering - among others - colori
 
 .. image:: _images/i_algorithm.png
 
-In the right corner of the title bar of this panel, you will find two buttons.
+In the right corner of the title bar of this panel, you find two buttons.
 
 The left button allows to expand/contract the contents of this panel:
 
-* |icon_hide_contents|: When this icon is displayed, clicking on this button will hide the contents of the panel.
+* |icon_hide_contents|: When this icon is displayed, clicking on this button hides the content of the panel.
 
-* |icon_show_contents|: When this icon is displayed, clicking on this button will show the contents of the panel.
+* |icon_show_contents|: When this icon is displayed, clicking on this button shows the content of the panel.
 
 Clicking on the right button displays a menu.
 
@@ -148,17 +150,17 @@ This panel gives information about the currently opened graphs.
 
 |
 
-In the right corner of this title bar of this panel, you will find two buttons.
+In the right corner of this title bar of this panel, you find two buttons.
 
 The left button allows to expand/contract the contents of this panel:
 
-* |icon_hide_contents|: When this icon is displayed, clicking on this button will hide the contents of the panel.
+* |icon_hide_contents|: When this icon is displayed, clicking on the button hides the panel's content.
 
-* |icon_show_contents|: When this icon is displayed, clicking on this button will show the contents of the panel.
+* |icon_show_contents|: When this icon is displayed, clicking on the button shows the panel's content.
 
 Clicking on right button allows to specify the synchronization policy of the Graphs panel with the workspace active panel:
 
-* |icon_link|: When this icon is displayed, it indicates that the selection of the active graph in the Graphs panel is synchronized with the selection of the graph in the workspace active panel. This means that when selecting a graph to display for this panel, it also becomes the active graph in the Graphs list and then the graph on which algorithms will applied.
+* |icon_link|: When this icon is displayed, it indicates that the selection of the active graph in the Graphs panel is synchronized with the selection of the graph in the workspace active panel. This means that when selecting a graph to display for this panel, it also becomes the active graph in the Graphs list and then the graph on which algorithms are applied.
 
 * |icon_unlink|: When this icon is displayed, it indicates that the selection of the active graph in the Graphs panel is not synchronized with the selection of the graph in the workspace active panel. 
 
@@ -224,8 +226,8 @@ Tulip can be configured in several ways. The simplest way is to display the sett
 .. image:: _images/i_settings.png
 
 
-The *Automatic actions* settings, contains a few specific options. You can, for instance, adjust the aspect ratio when updating the layout, indicate the default projection type, automatically adapt the color according the metric being computed, display the time used to run an algorithm or indicate the graph file format to be used when saving a Tulip project.
+The *Automatic actions* tab, contains a few specific options. You can, for instance, adjust the aspect ratio when updating the layout, indicate the default projection type, automatically adapt the color according the metric being computed, display the time used to run an algorithm or indicate the graph file format to be used when saving a Tulip project.
 
-The *Drawing defaults* settings, such as the color, shape and size, are used for every new nodes and edges. The selection color is used to enhance the selected elements in the 3D views.
+The *Display settings* tab allows to choose the *Display mode* (Light or Dark) and to select the *Drawing defaults* such as the color, shape and size used for every new nodes and edges. The selection color is used to enhance the selected elements in the 3D views.
 
 You can also change the *Proxy settings* such as: the socket, the host address and the port to use. 

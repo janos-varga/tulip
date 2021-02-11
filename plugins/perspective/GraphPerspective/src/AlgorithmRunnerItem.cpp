@@ -46,9 +46,10 @@
 
 using namespace tlp;
 
-AlgorithmRunnerItem::AlgorithmRunnerItem(QString pluginName, QWidget *parent)
+AlgorithmRunnerItem::AlgorithmRunnerItem(QString pluginName, bool darkBackground, QWidget *parent)
     : QWidget(parent), _ui(new Ui::AlgorithmRunnerItem), _pluginName(pluginName), _graph(nullptr),
       _storeResultAsLocal(true) {
+  setProperty("algorithRunnerItem", true);
   _ui->setupUi(this);
   connect(_ui->favoriteCheck, SIGNAL(toggled(bool)), this, SIGNAL(favorized(bool)));
   const Plugin &plugin = PluginLister::pluginInformation(QStringToTlpString(pluginName));
@@ -68,6 +69,11 @@ AlgorithmRunnerItem::AlgorithmRunnerItem(QString pluginName, QWidget *parent)
                       .arg(plugin.programmingLanguage().c_str()));
   // initialize parameters only if needed
   _ui->parameters->setVisible(false);
+  // set foreground colors according to contents background color
+  if (darkBackground) {
+    _ui->parameters->setStyleSheet("QHeaderView::section { color: white }");
+    _ui->playButton->setStyleSheet("QPushButton { color: white; text-align: left; } ");
+  }
 
   if (!plugin.getParameters().empty()) {
     _ui->parameters->setItemDelegate(new TulipItemDelegate(_ui->parameters));
@@ -87,6 +93,8 @@ AlgorithmRunnerItem::AlgorithmRunnerItem(QString pluginName, QWidget *parent)
   setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Maximum);
 
   connect(_ui->favoriteCheck, SIGNAL(stateChanged(int)), this, SLOT(favoriteChanged(int)));
+  // used to display plugin doc in a QMessageBox
+  _ui->settingsButton->installEventFilter(this);
 }
 
 AlgorithmRunnerItem::~AlgorithmRunnerItem() {
@@ -415,7 +423,7 @@ void AlgorithmRunnerItem::run(Graph *g) {
       // restore it in the dataset
       dataSet.set(opp.name, opp.dest);
 
-      if (opp.name == "result" && TulipSettings::instance().isResultPropertyStored()) {
+      if (opp.name == "result" && TulipSettings::isResultPropertyStored()) {
         // store the result property values in an automatically named property
         std::string storedResultName =
             algorithm + " - " + originalDataSet.toString() + "(" + opp.dest->getName() + ")";
@@ -426,11 +434,11 @@ void AlgorithmRunnerItem::run(Graph *g) {
     }
 
     // display spentTime if needed
-    if (TulipSettings::instance().logPluginCall() != TulipSettings::NoLog) {
+    if (TulipSettings::logPluginCall() != TulipSettings::NoLog) {
       std::stringstream log;
       log << algorithm.c_str() << " - " << dataSet.toString().c_str();
 
-      if (TulipSettings::instance().logPluginCall() == TulipSettings::LogCallWithExecutionTime)
+      if (TulipSettings::logPluginCall() == TulipSettings::LogCallWithExecutionTime)
         log << ": " << spentTime << "ms";
 
       qDebug() << log.str().c_str();
@@ -515,11 +523,23 @@ void AlgorithmRunnerItem::mouseMoveEvent(QMouseEvent *ev) {
   drag->exec(Qt::CopyAction | Qt::MoveAction);
 }
 
+bool AlgorithmRunnerItem::eventFilter(QObject *, QEvent *ev) {
+  if (ev->type() == QEvent::MouseButtonRelease) {
+    QMouseEvent *qMouseEv = static_cast<QMouseEvent *>(ev);
+    if (qMouseEv->button() == Qt::RightButton) {
+      QMessageBox::information(parentWidget(), this->name().append(" documentation"),
+                               _ui->playButton->toolTip());
+      return true;
+    }
+  }
+  return false;
+}
+
 void AlgorithmRunnerItem::afterRun(Graph *g, const tlp::DataSet &dataSet) {
   std::string stdName = QStringToTlpString(name());
 
   if (PluginLister::pluginExists<LayoutAlgorithm>(stdName)) {
-    if (TulipSettings::instance().isAutomaticRatio()) {
+    if (TulipSettings::isAutomaticRatio()) {
       LayoutProperty *prop = nullptr;
       dataSet.get<LayoutProperty *>("result", prop);
 
@@ -527,15 +547,15 @@ void AlgorithmRunnerItem::afterRun(Graph *g, const tlp::DataSet &dataSet) {
         prop->perfectAspectRatio(g);
     }
 
-    if (TulipSettings::instance().isAutomaticCentering())
+    if (TulipSettings::isAutomaticCentering())
       Perspective::typedInstance<GraphPerspective>()->centerPanelsForGraph(g);
-  } else if (TulipSettings::instance().isAutomaticCentering() &&
+  } else if (TulipSettings::isAutomaticCentering() &&
              PluginLister::pluginExists<Algorithm>(stdName) &&
              !PluginLister::pluginExists<PropertyAlgorithm>(stdName) &&
              !PluginLister::pluginExists<GraphTest>(stdName)) {
     Perspective::typedInstance<GraphPerspective>()->centerPanelsForGraph(g);
   } else if (PluginLister::pluginExists<DoubleAlgorithm>(stdName) &&
-             TulipSettings::instance().isAutomaticMapMetric()) {
+             TulipSettings::isAutomaticMapMetric()) {
     DoubleProperty *prop = nullptr;
     dataSet.get<DoubleProperty *>("result", prop);
 

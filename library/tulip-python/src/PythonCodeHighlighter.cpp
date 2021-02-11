@@ -25,7 +25,7 @@
 
 using namespace tlp;
 
-PythonCodeHighlighter::PythonCodeHighlighter(QTextDocument *parent)
+PythonCodeHighlighter::PythonCodeHighlighter(QTextDocument *parent, bool /*darkBackground*/)
     : QSyntaxHighlighter(parent), _shellMode(false) {
 
   QTextCharFormat builtinFormat;
@@ -33,13 +33,16 @@ PythonCodeHighlighter::PythonCodeHighlighter(QTextDocument *parent)
 
   HighlightingRule rule;
 
-  _commentFormat.setForeground(Qt::darkGreen);
+  _commentFormat.setForeground(QColor("#388E3C"));
   _functionFormat.setFontWeight(QFont::Bold);
-  _functionFormat.setForeground(Qt::darkCyan);
-  _tlpApiFormat.setForeground(QColor(128, 128, 0));
+  _functionFormat.setForeground(QColor("#0D47F1"));
+  _tlpApiFormat.setForeground(QColor("#E65100"));
   _classFormat.setFontWeight(QFont::Bold);
-  _classFormat.setForeground(Qt::blue);
-  _qtApiFormat.setForeground(QColor(0, 110, 40));
+  _classFormat.setForeground(QColor("#7E57C2"));
+  _qtApiFormat.setForeground(QColor("#00D09A"));
+  _keywordFormat.setForeground(QColor("#00A8FF"));
+  _numberFormat.setForeground(QColor("#00B8D4"));
+  _quotationFormat.setForeground(QColor("#E040FB"));
 
   rule.pattern = QRegExp("def [A-Za-z_][A-Za-z0-9_]+(?=\\()");
   rule.format = _functionFormat;
@@ -57,7 +60,6 @@ PythonCodeHighlighter::PythonCodeHighlighter(QTextDocument *parent)
   rule.format = builtinFormat;
   _highlightingRules.append(rule);
 
-  _keywordFormat.setForeground(Qt::darkBlue);
   _keywordFormat.setFontWeight(QFont::Bold);
   QStringList keywordPatterns;
   int i = 0;
@@ -128,7 +130,6 @@ PythonCodeHighlighter::PythonCodeHighlighter(QTextDocument *parent)
     _highlightingRules.append(rule);
   }
 
-  _numberFormat.setForeground(Qt::darkCyan);
   rule.pattern = QRegExp("\\b[0-9]+[lL]?\\b");
   rule.format = _numberFormat;
   _highlightingRules.append(rule);
@@ -136,8 +137,6 @@ PythonCodeHighlighter::PythonCodeHighlighter(QTextDocument *parent)
   _highlightingRules.append(rule);
   rule.pattern = QRegExp("\\b[0-9]+(?:\\.[0-9]+)?(?:[eE][+-]?[0-9]+)?\\b");
   _highlightingRules.append(rule);
-
-  _quotationFormat.setForeground(Qt::darkMagenta);
 }
 
 void PythonCodeHighlighter::highlightBlock(const QString &text) {

@@ -948,7 +948,9 @@ public:
                     "<p>Supported extensions: tlp, tlpz (compressed), tlp.gz "
                     "(compressed)</p><p>Imports a graph recorded in a file using the TLP format "
                     "(Tulip Software Graph Format).<br/>See "
-                    "<b>http://tulip.labri.fr->Framework->TLP File Format</b> for "
+                    "<a "
+                    "href=\"http://tulip.labri.fr/TulipDrupal/?q=tlp-file-format\">http://"
+                    "tulip.labri.fr->Framework->TLP File Format</a> for "
                     "description.<br/>Note: When using the Tulip graphical user "
                     "interface,<br/>choosing <b>File->Import->TLP</b> menu item is the same as "
                     "using <b>File->Open</b> menu item.</p>",
@@ -985,18 +987,14 @@ public:
 
     if (dataSet->exists("file::filename")) {
       dataSet->get<std::string>("file::filename", filename);
-      tlp_stat_t infoEntry;
-      result = (statPath(filename, &infoEntry) == 0);
 
-      if (!result) {
+      if (!pathExist(filename)) {
         std::stringstream ess;
         ess << filename.c_str() << ": " << strerror(errno);
         pluginProgress->setError(ess.str());
         tlp::warning() << pluginProgress->getError() << std::endl;
         return false;
       }
-
-      size = infoEntry.st_size;
 
       std::list<std::string> &&gexts = gzipFileExtensions();
       bool gzip(false);
@@ -1010,13 +1008,17 @@ public:
         }
       }
 
-      if (!gzip)
+      if (!gzip) {
         input = tlp::getInputFileStream(filename, std::ifstream::in |
                                                       // consider file has binary
                                                       // to avoid pb using tellg
                                                       // on the input stream
                                                       std::ifstream::binary);
-
+        // get file size
+        input->seekg(0, std::ios::end);
+        size = input->tellg();
+        input->seekg(0, std::ios::beg);
+      }
     } else {
       dataSet->get<std::string>("file::data", data);
       size = data.size();

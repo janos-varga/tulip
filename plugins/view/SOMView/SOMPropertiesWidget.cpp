@@ -45,10 +45,11 @@ SOMPropertiesWidget::SOMPropertiesWidget(SOMView *view, QWidget *parent)
 
   defaultScale->addObserver(this);
 
-  QVBoxLayout *sizeMappingLayout = new QVBoxLayout(_ui->nodeSizeMappingGroupBox);
-  sizeMappingLayout->setMargin(0);
+  QVBoxLayout *sizeMappingLayout = new QVBoxLayout(_ui->nodeSizeMappingFrame);
+#ifndef __APPLE__
   sizeMappingLayout->setSpacing(0);
-  sizeMappingLayout->setContentsMargins(0, 5, 0, 0);
+#endif
+  sizeMappingLayout->setContentsMargins(6, 0, 0, 0);
   sizeMappingButtonGroup = new QButtonGroup();
   noNodeSizeMappingRadioButton = new QRadioButton("No size mapping");
   sizeMappingButtonGroup->addButton(noNodeSizeMappingRadioButton);
@@ -61,7 +62,7 @@ SOMPropertiesWidget::SOMPropertiesWidget(SOMView *view, QWidget *parent)
   // Display multiple properties at same time
   multiplePropertiesRepresentation = false;
 
-  dimensionConfigurationWidget->setWindowTitle("Dimensions");
+  dimensionConfigurationWidget->setWindowTitle("Properties");
   setWindowTitle("Options");
 }
 

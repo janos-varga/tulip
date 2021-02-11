@@ -134,8 +134,8 @@ WorkspacePanel::~WorkspacePanel() {
 
   if (_view != nullptr) {
     disconnect(_view, SIGNAL(destroyed()), this, SLOT(viewDestroyed()));
-    _interactorConfigWidget->clearWidgets();
     delete _view;
+    delete _interactorConfigWidget;
     // same as above
     _view = nullptr;
   }
@@ -143,7 +143,6 @@ WorkspacePanel::~WorkspacePanel() {
 void WorkspacePanel::viewDestroyed() {
   if (_view != nullptr) {
     disconnect(_view, SIGNAL(destroyed()), this, SLOT(viewDestroyed()));
-    _interactorConfigWidget->clearWidgets();
     _view = nullptr;
   }
 
@@ -204,6 +203,10 @@ void WorkspacePanel::setView(tlp::View *view) {
 #endif
     // use the main window style sheet
     auto ss = Perspective::styleSheet();
+    // remove QTabBar specs
+    auto pos = ss.indexOf("QTabBar::tab {");
+    ss.remove(pos, ss.length() - pos);
+    // append the new ones
     ss.append(R"(
 QTabWidget {
   background-color: transparent;
@@ -359,8 +362,8 @@ void WorkspacePanel::closeEvent(QCloseEvent *event) {
 bool WorkspacePanel::eventFilter(QObject *obj, QEvent *ev) {
   if (_view != nullptr) {
     if (ev->type() == QEvent::GraphicsSceneContextMenu) {
-      _view->showContextMenu(QCursor::pos(),
-                             static_cast<QGraphicsSceneContextMenuEvent *>(ev)->scenePos());
+      return _view->showContextMenu(QCursor::pos(),
+                                    static_cast<QGraphicsSceneContextMenuEvent *>(ev)->scenePos());
     } else if (_viewConfigurationWidgets != nullptr &&
                _view->configurationWidgets().contains(qobject_cast<QWidget *>(obj)))
       return true;
@@ -456,8 +459,8 @@ void WorkspacePanel::refreshInteractorsToolbar() {
   bool interactorsUiShown = !compatibleInteractors.isEmpty();
   _ui->currentInteractorButton->setVisible(interactorsUiShown);
   _ui->interactorsFrame->setVisible(interactorsUiShown);
-  _ui->sep1->setVisible(interactorsUiShown);
   _ui->sep2->setVisible(interactorsUiShown);
+  _ui->sep4->setVisible(interactorsUiShown);
 
   if (interactorsUiShown) {
     QHBoxLayout *interactorsLayout = new QHBoxLayout;
@@ -496,11 +499,19 @@ void WorkspacePanel::actionChanged() {
 void WorkspacePanel::scrollInteractorsRight() {
   QScrollBar *scrollBar = _ui->scrollArea->horizontalScrollBar();
   scrollBar->setSliderPosition(scrollBar->sliderPosition() + scrollBar->singleStep());
+  if (scrollBar->sliderPosition() == scrollBar->maximum())
+    _ui->interactorsRight->setEnabled(false);
+  if (scrollBar->sliderPosition() > scrollBar->minimum())
+    _ui->interactorsLeft->setEnabled(true);
 }
 
 void WorkspacePanel::scrollInteractorsLeft() {
   QScrollBar *scrollBar = _ui->scrollArea->horizontalScrollBar();
   scrollBar->setSliderPosition(scrollBar->sliderPosition() - scrollBar->singleStep());
+  if (scrollBar->sliderPosition() < scrollBar->maximum())
+    _ui->interactorsRight->setEnabled(true);
+  if (scrollBar->sliderPosition() == scrollBar->minimum())
+    _ui->interactorsLeft->setEnabled(false);
 }
 
 void WorkspacePanel::resetInteractorsScrollButtonsVisibility() {
@@ -508,6 +519,10 @@ void WorkspacePanel::resetInteractorsScrollButtonsVisibility() {
   bool interactorScrollBtnVisible = scrollBar->minimum() != scrollBar->maximum();
   _ui->interactorsLeft->setVisible(interactorScrollBtnVisible);
   _ui->interactorsRight->setVisible(interactorScrollBtnVisible);
+  if (interactorScrollBtnVisible) {
+    _ui->interactorsRight->setEnabled(scrollBar->sliderPosition() != scrollBar->maximum());
+    _ui->interactorsLeft->setEnabled(scrollBar->sliderPosition() != scrollBar->minimum());
+  }
 }
 
 void WorkspacePanel::setGraphsModel(tlp::GraphHierarchiesModel *model) {

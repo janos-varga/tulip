@@ -20,7 +20,7 @@
       <string notr="true">QLabel { font: bold; }</string>
      </property>
      <property name="text">
-      <string>Select geolocation method:</string>
+      <string>Select geolocation method</string>
      </property>
     </widget>
    </item>
@@ -37,7 +37,7 @@
    <item>
     <widget class="QLabel" name="label_6">
      <property name="text">
-      <string>&lt;html&gt;&lt;body&gt;&lt;p&gt;Use the &lt;a href=&quot;https://nominatim.openstreetmap.org/&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;Nominatim&lt;/span&gt;&lt;/a&gt; geocoding service to get the nodes locations corresponding to the values stored in the&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+      <string>&lt;html&gt;&lt;body&gt;&lt;p&gt;Use the &lt;a href=&quot;https://nominatim.openstreetmap.org/&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0d47f1;&quot;&gt;Nominatim&lt;/span&gt;&lt;/a&gt; geocoding service to get the nodes locations corresponding to the values stored in the&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
      </property>
      <property name="wordWrap">
       <bool>true</bool>
@@ -133,7 +133,7 @@
    <item>
     <widget class="QLabel" name="label_3">
      <property name="text">
-      <string>Use the nodes locations stored in latitude/longitude properties:</string>
+      <string>Use the nodes locations stored in latitude/longitude properties</string>
      </property>
      <property name="wordWrap">
       <bool>true</bool>
@@ -194,24 +194,28 @@
     </layout>
    </item>
    <item>
-    <widget class="QGroupBox" name="edgesControlPointsGB">
+    <widget class="QFrame" name="edgesControlPointsGB">
      <property name="enabled">
-      <bool>false</bool>
-     </property>
-     <property name="title">
-      <string>edges pat&amp;hs</string>
-     </property>
-     <property name="checkable">
-      <bool>true</bool>
-     </property>
-     <property name="checked">
       <bool>false</bool>
      </property>
      <layout class="QVBoxLayout" name="verticalLayout">
       <item>
+       <widget class="QCheckBox" name="edgesPathsCB">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
+        <property name="text">
+         <string>edges pat&amp;hs</string>
+        </property>
+       </widget>
+      </item>
+      <item>
        <layout class="QHBoxLayout" name="horizontalLayout_5">
         <item>
-         <widget class="QLabel" name="label_7">
+         <widget class="QLabel" name="pathLabel">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
           <property name="text">
            <string>path:</string>
           </property>
@@ -219,6 +223,9 @@
         </item>
         <item>
          <widget class="QComboBox" name="edgesPathsPropertyCB">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
           <property name="sizePolicy">
            <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
             <horstretch>0</horstretch>
@@ -287,14 +294,63 @@
    </item>
   </layout>
  </widget>
- <resources/>
- <connections/>
  <customwidgets>
-   <customwidget>
-     <class>tlp::TulipComboBox</class>
-     <extends>QComboBox</extends>
-     <header>tulip/TulipComboBox.h</header>
-     <container>1</container>
-   </customwidget>
+  <customwidget>
+   <class>tlp::TulipComboBox</class>
+   <extends>QComboBox</extends>
+   <header>tulip/TulipComboBox.h</header>
+   <container>1</container>
+  </customwidget>
  </customwidgets>
+ <resources/>
+ <connections>
+  <connection>
+   <sender>latLngRB</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>edgesControlPointsGB</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>235</x>
+     <y>238</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>235</x>
+     <y>384</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>edgesPathsCB</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>edgesPathsPropertyCB</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>235</x>
+     <y>366</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>255</x>
+     <y>398</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>edgesPathsCB</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>pathLabel</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>235</x>
+     <y>366</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>36</x>
+     <y>398</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
 </ui>

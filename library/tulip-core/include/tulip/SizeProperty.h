@@ -52,6 +52,7 @@ public:
   const std::string &getTypename() const override {
     return propertyTypename;
   }
+  DEFINE_GET_CPP_CLASS_NAME;
 
   // redefinition of some AbstractProperty methods
   void setNodeValue(const node n, tlp::StoredType<Size>::ReturnedConstValue v) override;
@@ -86,6 +87,7 @@ public:
   const std::string &getTypename() const override {
     return propertyTypename;
   }
+  DEFINE_GET_CPP_CLASS_NAME;
 };
 } // namespace tlp
 #endif

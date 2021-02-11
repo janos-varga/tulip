@@ -34,6 +34,12 @@
    </property>
    <item>
     <widget class="QFrame" name="frame">
+     <property name="frameShape">
+      <enum>QFrame::Box</enum>
+     </property>
+     <property name="frameShadow">
+      <enum>QFrame::Raised</enum>
+     </property>
      <layout class="QVBoxLayout" name="verticalLayout_2">
       <property name="spacing">
        <number>5</number>
@@ -83,6 +89,7 @@ font-size: 12px;
 background-color: transparent;
 }
 QPushButton:hover {
+color: black;
 border-image: url(:/tulip/gui/ui/btn_26_hover.png) 4;
 }
 	     </string>

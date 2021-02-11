@@ -33,9 +33,6 @@ stop:0 #F0F0F0);
 border: 0px;
 }</string>
   </property>
-  <property name="sizeGripEnabled">
-   <bool>true</bool>
-  </property>
   <property name="modal">
    <bool>true</bool>
   </property>
@@ -84,7 +81,7 @@ border: 0px;
           </sizepolicy>
          </property>
          <property name="text">
-          <string>&lt;b&gt;Selected graph:&lt;/b&gt;</string>
+          <string>&lt;b&gt;Selected graph&lt;/b&gt;</string>
          </property>
         </widget>
        </item>

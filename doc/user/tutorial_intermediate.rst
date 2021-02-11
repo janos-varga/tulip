@@ -236,8 +236,6 @@ Here is the final layout. As we can see, it is not perfect, and there are some i
 Analysis of a Multivariate Dataset
 ==================================
 
-.. |icon_workspace_macros| image:: _images/icon_workspace_macros.png
-
 .. |icon_wsm_node_size_set| image:: ../../library/tulip-gui/resources/icons/20/set_node_size.png
 
 .. |icon_wsm_node_color_set| image:: ../../library/tulip-gui/resources/icons/20/set_node_color.png
@@ -525,6 +523,8 @@ Here we can see that while there is a certain degree of correlation between the 
 
 Using the Python IDE to implement a specific algorithm
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. |icon_ide| image:: ../python/tulipPythonIDEButton.png
+    :width: 24
 
 In this section, we will go through how we can apply an algorithm such as the one we used to map the **degree** of the nodes to their **viewFontSize** property. This will be the opportunity to introduce the reader to the **Python IDE**, a central feature of the Tulip framework.
 
@@ -532,12 +532,7 @@ The reason why we use the **Python IDE** in this particular case is because ther
 
 .. note:: For more information on how to use the Python IDE or Python REPL, please consult the `Tulip Python Documentation <http://tulip.labri.fr/Documentation/current/tulip-python/html/index.html>`_.
 
-The first step is to open the *Python IDE* window. 
-
-
-.. image:: _images/tulipPythonIDEButtonb.png
-  :align: center
-
+The first step is to open the *Python IDE* window in clicking on the |icon_ide| **Python** button located in the left side of the Tulip GUI.
 
 In this case, we will only use the **Scripts editor** tab to implement our simple algorithm. By default, when we open a new script, the code consists of a **For** loop that iterates through all the nodes of the current graph and prints their **ID**. Because we thought that it would be relevant to see the chess players' names directly in the view, we had to make their **viewFontSize** property proportionate to their **degree**. 
 

@@ -43,7 +43,8 @@ class AlgorithmRunnerItem : public QWidget {
   static tlp::ParameterListModel *colorMappingModel;
 
 public:
-  explicit AlgorithmRunnerItem(QString pluginName, QWidget *parent = nullptr);
+  explicit AlgorithmRunnerItem(QString pluginName, bool darkBackground = false,
+                               QWidget *parent = nullptr);
   ~AlgorithmRunnerItem() override;
 
   QString name() const;
@@ -53,6 +54,7 @@ public:
   void setFavorite(bool);
 
 protected:
+  bool eventFilter(QObject *, QEvent *) override;
   void mousePressEvent(QMouseEvent *ev) override;
   void mouseMoveEvent(QMouseEvent *ev) override;
 

@@ -25,6 +25,8 @@
 #include <tulip/OpenGlConfigManager.h>
 #include <tulip/PythonVersionChecker.h>
 #include <tulip/GlOffscreenRenderer.h>
+#include <tulip/TulipFontAwesome.h>
+#include <tulip/TulipMaterialDesignIcons.h>
 
 #include "ui_AboutTulipPage.h"
 
@@ -34,6 +36,10 @@
 #include <QDesktopServices>
 #include <QUrl>
 #include <QOpenGLContext>
+#include <QNetworkAccessManager>
+#include <QNetworkRequest>
+#include <QNetworkReply>
+#include <QXmlStreamReader>
 
 namespace tlp {
 #ifdef TULIP_BUILD_PYTHON_COMPONENTS
@@ -42,7 +48,9 @@ extern QString getSipVersion();
 extern QString getTulipGitRevision();
 } // namespace tlp
 
-const QString TulipRepoUrl = "https://github.com/Tulip-Dev/tulip";
+static const QString TulipRepoUrl = "https://github.com/Tulip-Dev/tulip";
+static const QString RSS_URL = "https://tulip.labri.fr/TulipDrupal/?q=newsFeed.xml";
+static const unsigned RSS_LIMIT = 3;
 
 using namespace tlp;
 
@@ -56,17 +64,17 @@ AboutTulipPage::AboutTulipPage(QWidget *parent)
 
   if (!git_rev.isEmpty())
     title += "<br/>(Git commit: <a href=\"" + TulipRepoUrl + "/commit/" + git_rev + "\">" +
-             git_rev.mid(0, 7) + "</a>)";
+             "<span style=\"color: #0d47f1;\">" + git_rev.mid(0, 7) + "</span></a>)";
 
-  _ui->logolabel->setPixmap(QPixmap(tlpStringToQString(TulipBitmapDir + "/logo.bmp")));
+  _ui->logolabel->setPixmap(QPixmap(tlpStringToQString(TulipBitmapDir + "/welcomelogo.bmp")));
   _ui->TulipLabel->setText(
       "<html>"
       "  <head/>"
       "  <body>"
-      "    <p align=\"center\"><span style=\" font-size:24pt; font-weight:600;\">" +
+      "    <p align=\"center\"><span style=\" font-size:18pt; font-weight:600;\">" +
       title + "</span></p>" +
       (!git_rev.isEmpty() ? (QString("    <p align=\"center\"><a href=\"") + TulipRepoUrl + "\">" +
-                             TulipRepoUrl + "</a></p>")
+                             "<span style=\"color: #0d47f1;\">" + TulipRepoUrl + "</span></a></p>")
                           : QString()) +
       "  </body>"
       "</html>");
@@ -76,34 +84,70 @@ AboutTulipPage::AboutTulipPage(QWidget *parent)
   if (openGL_OK)
     GlOffscreenRenderer::getInstance()->makeOpenGLContextCurrent();
 
+  /*  QString tulipDependenciesInfo =
+      "<p style=\"font-size:12pt\">"
+      "This open source software is powered by:"
+      "<ul>"
+      "<li><a href=\"https://www.qt.io\"><span style=\"color: #0d47f1;\">"
+      "<b>Qt</b></span></a> " + tlpStringToQString(qVersion()) +
+      "</li>"
+      "<li><a href=\"https://www.opengl.org\"><span style=\"color: #0d47f1;\">"
+      "<b>OpenGL</b></span></a> " +
+      (openGL_OK ? QString::number(OpenGlConfigManager::getOpenGLVersion()) : QString("?.?")) +
+      " (from vendor " +
+      (openGL_OK ? tlpStringToQString(OpenGlConfigManager::getOpenGLVendor())
+                 : QString("unknown")) +
+      ") </li>"
+      "<li><a href=\"http://ogdf.net/\"><span style=\"color: #0d47f1;\">"
+      "<b>OGDF</b></span></a> v" + OGDF_VERSION + "</li>"
+#ifdef TULIP_BUILD_PYTHON_COMPONENTS
+      "<li><a href=\"https://www.python.org\"><span style=\"color: #0d47f1;\">"
+      "<b> Python </b></span></a> " + PythonVersionChecker::compiledVersion() +
+      "</li>"
+      "<li> <a href=\"https://www.riverbankcomputing.com/software/sip\"><span style=\"color:
+#0d47f1;\">"
+      "<b>SIP</b></span></a> " + getSipVersion() + "</li>"
+#endif
+      "</ul>"
+      "</p>";*/
   QString tulipDependenciesInfo =
       "<p style=\"font-size:12pt\">"
       "This open source software is powered by:"
       "<ul>"
       "  <li> <b> Qt </b> " +
       tlpStringToQString(qVersion()) +
-      ": <a href=\"https://www.qt.io\">https://www.qt.io</a></li>"
+      ": <a href=\"https://www.qt.io\"><span style=\"color: "
+      "#0d47f1;\">www.qt.io</span></a></li>"
       "  <li> <b> OpenGL </b> " +
       (openGL_OK ? QString::number(OpenGlConfigManager::getOpenGLVersion()) : QString("?.?")) +
-      " (from vendor " +
-      (openGL_OK ? tlpStringToQString(OpenGlConfigManager::getOpenGLVendor())
-                 : QString("unknown")) +
-      "): <a href=\"https://www.opengl.org\">https://www.opengl.org</a> </li>"
+      ": <a href=\"https://www.opengl.org\"><span style=\"color: "
+      "#0d47f1;\">www.opengl.org</span></a> </li>"
       "<li><b>OGDF</b> v" +
       OGDF_VERSION +
       ": <a "
-      "href=\"http://ogdf.net/\">http://ogdf.net/</a> </li>"
+      "href=\"http://ogdf.net/\"><span style=\"color: #0d47f1;\">ogdf.net</span></a> </li>"
 #ifdef TULIP_BUILD_PYTHON_COMPONENTS
-
       "  <li> <b> Python </b> " +
       PythonVersionChecker::compiledVersion() +
-      ": <a href=\"https://www.python.org\">https://www.python.org</a> </li>"
+      ": <a href=\"https://www.python.org\"><span style=\"color: "
+      "#0d47f1;\">www.python.org</span></a> </li>"
       "  <li> <b> SIP </b> " +
       getSipVersion() +
       ": <a "
-      "href=\"https://www.riverbankcomputing.com/software/sip\">https://"
-      "www.riverbankcomputing.com/software/sip</a> </li>"
+      "href=\"https://www.riverbankcomputing.com/software/sip\"><span style=\"color: "
+      "#0d47f1;\">www.riverbankcomputing.com/software/sip</span></a></li>"
 #endif
+      "<li><b>Font Awesome</b> " +
+      TulipFontAwesome::getVersion().c_str() +
+      ": <a href=\"http://fontawesome.com\"><span style=\"color: #0d47f1;\">"
+      "fontawesome.com</span></a></li>"
+      "<li><b>Material Design Icons</b> " +
+      TulipMaterialDesignIcons::getVersion().c_str() +
+      ": <a href=\"https://materialdesignicons.com\"><span style=\"color: #0d47f1;\">"
+      "materialdesignicons.com</span></a></li>"
+      "<li><b>Color Brewer</b> "
+      ": <a href=\"http://colorbrewer2.org\"><span style=\"color: #0d47f1;\">"
+      "colorbrewer2.org</span></a></li>"
       "</ul>"
       "</p>";
 
@@ -116,6 +160,14 @@ AboutTulipPage::AboutTulipPage(QWidget *parent)
           SLOT(openUrlInBrowser(const QString &)));
   connect(_ui->TulipLabel, SIGNAL(linkActivated(const QString &)), this,
           SLOT(openUrlInBrowser(const QString &)));
+  connect(_ui->websiteLabel, SIGNAL(linkActivated(const QString &)), this,
+          SLOT(openUrlInBrowser(const QString &)));
+
+  // Fetch RSS
+  _ui->rssScroll->setVisible(false);
+  QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+  connect(manager, SIGNAL(finished(QNetworkReply *)), this, SLOT(rssReply(QNetworkReply *)));
+  manager->get(QNetworkRequest(QUrl(RSS_URL)));
 
   QPixmap qp(QString((TulipBitmapDir + "/samplePictures/1221.png").c_str()));
   _ui->sample_1221->setPixmap(qp.scaled(230, 128, Qt::KeepAspectRatio, Qt::SmoothTransformation));
@@ -146,4 +198,52 @@ AboutTulipPage::~AboutTulipPage() {
 
 void AboutTulipPage::openUrlInBrowser(const QString &url) {
   QDesktopServices::openUrl(QUrl(url));
+}
+
+void AboutTulipPage::rssReply(QNetworkReply *reply) {
+  sender()->deleteLater();
+  QXmlStreamReader xmlReader(reply);
+  unsigned i = 0;
+  QVBoxLayout *rssLayout = new QVBoxLayout;
+  rssLayout->setContentsMargins(0, 0, 0, 0);
+  rssLayout->setSpacing(30);
+  _ui->rssScroll->widget()->setLayout(rssLayout);
+
+  while (!xmlReader.atEnd() && i < RSS_LIMIT) {
+    if (xmlReader.readNextStartElement()) {
+      QString title, description;
+
+      if (xmlReader.name() == "item") {
+        ++i;
+        _ui->rssError->setVisible(false);
+        _ui->rssScroll->setVisible(true);
+        QXmlStreamReader::TokenType p(xmlReader.readNext());
+
+        while (xmlReader.name() != "item" && p != QXmlStreamReader::EndElement) {
+          xmlReader.readNextStartElement();
+
+          if (xmlReader.name() == "title")
+            title = xmlReader.readElementText();
+
+          if (xmlReader.name() == "description")
+            description = xmlReader.readElementText();
+        }
+
+        QString text("<p><span style=\"color:#626262; font-size:large;\">");
+        text += title + "</span></p><p><span>" + description + "</span></p>";
+        QLabel *label = new QLabel(text, nullptr);
+        label->setMinimumWidth(1);
+        label->setWordWrap(true);
+        label->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
+        connect(label, SIGNAL(linkActivated(const QString &)), this,
+                SLOT(openUrlInBrowser(const QString &)));
+        rssLayout->addWidget(label);
+      }
+    }
+
+    if (xmlReader.hasError()) {
+      _ui->rssError->setVisible(true);
+      _ui->rssScroll->setVisible(false);
+    }
+  }
 }

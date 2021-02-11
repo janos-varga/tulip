@@ -211,6 +211,7 @@ GlComposite *readCsvFile(QString fileName) {
   return composite;
 }
 
+/* not used
 void simplifyPolyFile(QString fileName, float definition) {
 
   map<string, vector<vector<Coord>>> clearPolygons;
@@ -350,6 +351,7 @@ void simplifyPolyFile(QString fileName, float definition) {
     }
   }
 }
+*/
 
 static double latitudeToMercator(double latitude) {
   double mercatorLatitude = latitude * M_PI / 360.;
@@ -475,6 +477,7 @@ GeographicViewGraphicsView::GeographicViewGraphicsView(GeographicView *geoView,
                                         "Open the Geolocation configuration tab\n"
                                         "to proceed.");
   msgBox->setModal(false);
+  Perspective::setStyleSheet(msgBox);
   noLayoutMsgBox = scene()->addWidget(msgBox);
   noLayoutMsgBox->setParentItem(_placeholderItem);
 
@@ -852,7 +855,8 @@ void GeographicViewGraphicsView::loadCsvFile(QString fileName) {
   polygonEntity = readCsvFile(fileName);
 
   if (!polygonEntity) {
-    QMessageBox::critical(nullptr, "Can't read .poly file",
+    QMessageBox::critical(Perspective::instance()->mainWindow()->centralWidget(),
+                          "Can't read .poly file",
                           "We can't read csv file: " + fileName + "\nVerify the file.");
     return;
   }
@@ -875,7 +879,8 @@ void GeographicViewGraphicsView::loadPolyFile(QString fileName) {
   polygonEntity = readPolyFile(fileName);
 
   if (!polygonEntity) {
-    QMessageBox::critical(nullptr, "Can't read .poly file",
+    QMessageBox::critical(Perspective::instance()->mainWindow()->centralWidget(),
+                          "Can't read .poly file",
                           "We can't read .poly file: " + fileName + "\nVerify the file.");
     return;
   }
@@ -1080,12 +1085,15 @@ void GeographicViewGraphicsView::createLayoutWithAddresses(const string &address
             }
 
             const pair<double, double> &latLng = geocodingResults[idx].latLng;
-            nodeLatLng[n] = addressesLatLngMap[addr] = latLng;
+            nodeLatLng[n] = latLng;
 
             if (createLatAndLngProps) {
               latProp->setNodeValue(n, latLng.first);
               lngProp->setNodeValue(n, latLng.second);
             }
+
+            if (addressSelectionDialog->rememberAddressChoice())
+              addressesLatLngMap[addr] = latLng;
           }
         }
       }

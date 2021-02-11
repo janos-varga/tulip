@@ -49,7 +49,7 @@ Workspace::Workspace(QWidget *parent)
       _focusedPanel(nullptr), _focusedPanelHighlighting(false), _model(nullptr),
       _exposeButton(nullptr), _autoCenterViews(false) {
   _ui->setupUi(this);
-  _ui->bottomFrame->setVisible(false);
+  _ui->hiddenFrame->setVisible(false);
   _ui->startupMainFrame->hide();
   _ui->workspaceContents->setCurrentWidget(_ui->startupPage);
   connect(_ui->startupButton, SIGNAL(clicked()), this, SIGNAL(addPanelRequest()));
@@ -129,6 +129,7 @@ void Workspace::closeAll() {
     delete p; // beware: the destroyed signal is connected to panelDestroyed
   }
   _panels.clear();
+  emit panelsEmpty();
 }
 
 QList<tlp::View *> Workspace::panels() const {
@@ -205,6 +206,9 @@ void Workspace::delView(tlp::View *view) {
     if (it->view() == view) {
       delete it;
       _panels.removeOne(it);
+      if (_panels.empty()) {
+        emit panelsEmpty();
+      }
       return;
     }
   }
@@ -217,6 +221,10 @@ void Workspace::panelDestroyed(QObject *obj) {
     _focusedPanel = nullptr;
 
   int removeCount = _panels.removeAll(panel);
+
+  if (_panels.empty()) {
+    emit panelsEmpty();
+  }
 
   if (removeCount == 0)
     return;
@@ -317,7 +325,7 @@ void Workspace::switchWorkspaceMode(QWidget *page) {
     return;
 
   _ui->workspaceContents->setCurrentWidget(page);
-  _ui->bottomFrame->setEnabled(page != _ui->startupPage);
+  _ui->hiddenFrame->setEnabled(page != _ui->startupPage);
   updateStartupMode();
   updatePanels();
 }

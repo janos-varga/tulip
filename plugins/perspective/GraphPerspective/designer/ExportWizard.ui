@@ -17,14 +17,11 @@
    <iconset>
     <normaloff>:/tulip/gui/icons/logo32x32.png</normaloff>:/tulip/gui/icons/logo32x32.png</iconset>
   </property>
-  <property name="sizeGripEnabled">
-   <bool>true</bool>
-  </property>
   <property name="modal">
    <bool>true</bool>
   </property>
   <property name="options">
-   <set>QWizard::ExtendedWatermarkPixmap|QWizard::HaveFinishButtonOnEarlyPages|QWizard::NoBackButtonOnStartPage</set>
+   <set>QWizard::ExtendedWatermarkPixmap|QWizard::HaveFinishButtonOnEarlyPages|QWizard::HaveHelpButton|QWizard::NoBackButtonOnStartPage</set>
   </property>
   <property name="titleFormat">
    <enum>Qt::RichText</enum>
@@ -34,7 +31,7 @@
   </property>
   <widget class="QWizardPage" name="choosePluginPage">
    <property name="title">
-    <string>&lt;img src=&quot;:/tulip/gui/icons/64/document-export.png&quot; width=32 height=32/&gt; Graph exporting Wizard</string>
+    <string>&lt;img src=&quot;:/tulip/gui/icons/64/document-export.png&quot; width=32 height=32/&gt; Graph export Wizard</string>
    </property>
    <attribute name="pageId">
     <string notr="true">0</string>
@@ -144,8 +141,10 @@ border: 0px;
           <item>
            <widget class="QTreeView" name="exportModules">
             <property name="styleSheet">
-             <string notr="true"> QTreeView::branch {
- border-image: url(none.png) 0;
+             <string notr="true">QTreeView:enabled { color: black; }
+
+ QTreeView::branch {
+         border-image: url(none.png) 0;
  }
 
  QTreeView::branch:has-children:!has-siblings:closed,
@@ -234,9 +233,6 @@ border: 0px;
                 </property>
                 <property name="editTriggers">
                  <set>QAbstractItemView::AllEditTriggers</set>
-                </property>
-                <property name="alternatingRowColors">
-                 <bool>true</bool>
                 </property>
                 <property name="selectionMode">
                  <enum>QAbstractItemView::SingleSelection</enum>

@@ -254,7 +254,9 @@ public:
 
   static void deleteStaticResources() {
     delete _autoCompletionDb;
+    _autoCompletionDb = nullptr;
     delete _autoCompletionList;
+    _autoCompletionList = nullptr;
   }
 
 protected:
@@ -316,6 +318,7 @@ protected:
   bool _findReplaceActivate;
   bool _commentShortcutsActivate;
   bool _indentShortcutsActivate;
+  bool _darkBackground;
 
   QPoint _toolTipPos;
   QString _toolTipText;

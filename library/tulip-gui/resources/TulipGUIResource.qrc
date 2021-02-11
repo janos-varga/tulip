@@ -16,6 +16,7 @@
         <file>icons/json32x32.png</file>
         <file>icons/tlpb32x32.png</file>
         <file>icons/python.png</file>
+        <file>icons/16/python.png</file>
         <file>icons/tulip.ico</file>
         <file>ui/arrowdown.png</file>
         <file>ui/arrowup.png</file>
@@ -28,6 +29,8 @@
         <file>ui/blackclosebutton.png</file>
         <file>ui/down_arrow-black.png</file>
         <file>ui/down_arrow-white.png</file>
+        <file>ui/up_arrow-black.png</file>
+        <file>ui/up_arrow-white.png</file>
         <file>ui/grid_screen.png</file>
         <file>ui/lightclosebutton.png</file>
         <file>ui/whiteclosebutton.png</file>
@@ -90,9 +93,14 @@
         <file>icons/20/edge_size_interpolation.png</file>
         <file>icons/20/node_color_interpolation.png</file>
         <file>icons/20/node_size_interpolation.png</file>
-        <file>icons/eye.png</file>
-        <file>icons/eye_disabled.png</file>
-        <file>icons/eye_partially_disabled.png</file>
+        <file>icons/eye-black.png</file>
+        <file>icons/eye_disabled-black.png</file>
+        <file>icons/eye_partially_disabled-black.png</file>
+        <file>icons/eye-white.png</file>
+        <file>icons/eye_disabled-white.png</file>
+        <file>icons/eye_partially_disabled-white.png</file>
+        <file>ui/left_arrow-gray.png</file>
+        <file>ui/right_arrow-gray.png</file>
         <file>ui/left_arrow-white.png</file>
         <file>ui/right_arrow-white.png</file>
         <file>ui/six_screen.png</file>

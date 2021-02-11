@@ -72,7 +72,7 @@ void AlgorithmRunner::buildTreeUi(QWidget *w, PluginModel<tlp::Algorithm> *model
       w->layout()->addWidget(groupBox);
       buildTreeUi(groupBox->widget(), model, index);
     } else {
-      AlgorithmRunnerItem *item = new AlgorithmRunnerItem(name);
+      AlgorithmRunnerItem *item = new AlgorithmRunnerItem(name, _darkBackground);
       QObject::connect(this, SIGNAL(setStoreResultAsLocal(bool)), item,
                        SLOT(setStoreResultAsLocal(bool)));
       w->layout()->addWidget(item);
@@ -130,7 +130,7 @@ void AlgorithmRunner::insertItem(QWidget *w, const QString &name) {
     }
   }
 
-  AlgorithmRunnerItem *item = new AlgorithmRunnerItem(name);
+  AlgorithmRunnerItem *item = new AlgorithmRunnerItem(name, _darkBackground);
   QObject::connect(this, SIGNAL(setStoreResultAsLocal(bool)), item,
                    SLOT(setStoreResultAsLocal(bool)));
   QObject::connect(item, SIGNAL(favorized(bool)), this, SLOT(favorized(bool)));
@@ -181,6 +181,14 @@ void AlgorithmRunner::refreshTreeUi(QWidget *w) {
 AlgorithmRunner::AlgorithmRunner(QWidget *parent)
     : QWidget(parent), _ui(new Ui::AlgorithmRunner), _graph(nullptr) {
   _ui->setupUi(this);
+  _darkBackground = _ui->contents->palette().color(backgroundRole()) != QColor(255, 255, 255);
+  if (_darkBackground) {
+    // set style sheets according to contents background color
+    auto ass = _ui->algorithmList->styleSheet();
+    ass.replace(QString("black"), QString("white"));
+    _ui->algorithmList->setStyleSheet(ass);
+    _ui->favoritesBox->setStyleSheet(ass.append(_ui->favoritesBox->styleSheet()));
+  }
   _ui->favoritesBox->setWidget(new QWidget());
   _ui->favoritesBox->widget()->setAcceptDrops(true);
   _ui->favoritesBox->widget()->setMinimumHeight(45);
@@ -230,7 +238,7 @@ AlgorithmRunner::AlgorithmRunner(QWidget *parent)
     connect(i, SIGNAL(favorized(bool)), this, SLOT(favorized(bool)));
   }
 
-  for (const QString &a : TulipSettings::instance().favoriteAlgorithms()) {
+  for (const QString &a : TulipSettings::favoriteAlgorithms()) {
     addFavorite(a);
   }
 
@@ -342,8 +350,12 @@ bool AlgorithmRunner::eventFilter(QObject *obj, QEvent *ev) {
       QFont f;
       f.setItalic(true);
       painter.setFont(f);
-      painter.setBrush(QColor(107, 107, 107));
-      painter.setPen(QColor(107, 107, 107));
+      QColor bColor(107, 107, 107);
+      // use a lighter color when background is not white
+      if (palette().color(backgroundRole()) != QColor(255, 255, 255))
+        bColor = QColor(157, 157, 157);
+      painter.setBrush(bColor);
+      painter.setPen(bColor);
       painter.drawText(0, 8 + (px.height() - 12) / 2, _ui->favoritesBox->widget()->width(), 65535,
                        /*Qt::AlignHCenter | Qt::AlignTop |*/ Qt::TextWordWrap,
                        "Put your favorite algorithms here");
@@ -391,7 +403,7 @@ void AlgorithmRunner::removeFavorite(const QString &algName) {
     }
   }
 
-  TulipSettings::instance().removeFavoriteAlgorithm(algName);
+  TulipSettings::removeFavoriteAlgorithm(algName);
 
   if (_favorites.isEmpty())
     _ui->favoritesBox->widget()->setMinimumHeight(45);
@@ -401,7 +413,7 @@ void AlgorithmRunner::addFavorite(const QString &algName, const DataSet &data) {
   if (!PluginLister::pluginExists(QStringToTlpString(algName)))
     return;
 
-  TulipSettings::instance().addFavoriteAlgorithm(algName);
+  TulipSettings::addFavoriteAlgorithm(algName);
 
   for (auto i : _favorites) {
     if (i->name() == algName)
@@ -409,7 +421,7 @@ void AlgorithmRunner::addFavorite(const QString &algName, const DataSet &data) {
   }
 
   _ui->favoritesBox->widget()->setMinimumHeight(0);
-  AlgorithmRunnerItem *item = new AlgorithmRunnerItem(algName);
+  AlgorithmRunnerItem *item = new AlgorithmRunnerItem(algName, _darkBackground);
   item->setGraph(_graph);
 
   if (!data.empty()) {

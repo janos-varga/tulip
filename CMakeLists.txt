@@ -1,5 +1,8 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 3.1)
 
+# First display CMake version
+MESSAGE(STATUS "Using CMake ${CMAKE_VERSION}")
+
 # Remove CMake warnings related to Qt5
 IF(POLICY CMP0020)
   CMAKE_POLICY(SET CMP0020 NEW)
@@ -14,16 +17,13 @@ ENDIF(POLICY CMP0025)
 IF(POLICY CMP0042)
   CMAKE_POLICY(SET CMP0042 NEW)
 ENDIF(POLICY CMP0042)
-
-# Ensure CMAKE_BUILD_WITH_INSTALL_RPATH is still honored with CMake >= 3.9
-# This is needed in order to build tulip-python wheels on MacOS
 IF(POLICY CMP0068)
-  CMAKE_POLICY(SET CMP0068 OLD)
+  CMAKE_POLICY(SET CMP0068 NEW)
 ENDIF(POLICY CMP0068)
 
-# Force the use of the legacy libGL.so for CMake >= 3.11
+# allow FindOpenGL to use GLVND when available
 IF(POLICY CMP0072)
-  CMAKE_POLICY(SET CMP0072 OLD)
+  CMAKE_POLICY(SET CMP0072 NEW)
 ENDIF(POLICY CMP0072)
 
 # enable the use of ccache for Tulip developers to speed up the build process
@@ -107,8 +107,8 @@ INCLUDE(cmake/TulipUseFile.cmake)
 ## Tulip version variables
 ## ========================================================
 SET(TulipMajorVersion 5)
-SET(TulipMinorVersion 4)
-SET(TulipReleaseVersion "0")
+SET(TulipMinorVersion 5)
+SET(TulipReleaseVersion "1")
 SET(TulipVersionSeparator .)
 IF(MSVC) #specific options for Visual Studio
   SET(TulipVersionSeparator _)

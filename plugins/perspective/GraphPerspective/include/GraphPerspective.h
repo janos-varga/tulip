@@ -57,7 +57,6 @@ class GraphPerspective : public tlp::Perspective, tlp::Observable {
 
   void reserveDefaultProperties();
   QString _lastOpenLocation;
-  QString _recentDocumentsSettingsKey;
 
   void buildRecentDocumentsMenu();
   void addRecentDocument(const QString &path);
@@ -167,11 +166,10 @@ protected slots:
   void showStartMessage();
   void resetLoggerDialogPosition();
   void showHideLogger();
+  void panelsEmpty();
   void showHideMenuBar();
   void updateLogIconsAndCounters();
-#ifdef TULIP_BUILD_PYTHON_COMPONENTS
   void initPythonIDE();
-#endif
   void displayStatusMessage(const QString &s) override;
   void clearStatusMessage() override;
 

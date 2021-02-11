@@ -42,6 +42,7 @@ public:
   const std::string &getTypename() const override {
     return propertyTypename;
   }
+  DEFINE_GET_CPP_CLASS_NAME;
 
   int compare(const node n1, const node n2) const override;
   int compare(const edge e1, const edge e2) const override;
@@ -62,6 +63,7 @@ public:
   const std::string &getTypename() const override {
     return propertyTypename;
   }
+  DEFINE_GET_CPP_CLASS_NAME;
 };
 } // namespace tlp
 #endif

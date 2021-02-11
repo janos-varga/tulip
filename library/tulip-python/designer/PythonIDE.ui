@@ -2,6 +2,26 @@
 <ui version="4.0">
  <class>PythonIDE</class>
  <widget class="QFrame" name="PythonIDE">
+  <property name="styleSheet">
+   <string notr="true">
+QToolButton {
+border-image:none;
+border-top: 1px;
+border-bottom: 1px;
+border-left: 0px;
+border-right: 0px;
+font: bold 10px;
+}
+
+QToolButton:hover {
+border: 1px solid #A0A0A0;
+}
+
+QToolButton:pressed {
+background-color: #A0A0A0;
+}
+   </string>
+  </property>
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -43,37 +63,10 @@
      <property name="orientation">
       <enum>Qt::Vertical</enum>
      </property>
-     <property name="styleSheet">
-       <string notr="true">
-QTabWidget::pane {
-border-top: none;
-}
-
-QTabBar::tab {
-font:normal;
-}
-
-QToolButton {
-border-image:none;
-border-top: 1px;
-border-bottom: 1px;
-border-left: 0px;
-border-right: 0px;
-font: bold 10px;
-}
-
-QToolButton:hover {
-border-width: 1px;
-border-style: solid;
-border-color: #A0A0A0;
-}
-
-QToolButton:pressed {
-background-color: #A0A0A0;
-}
-       </string>
-      </property>
      <widget class="PythonTabWidget" name="tabWidget">
+      <property name="styleSheet">
+       <string notr="true">QFrame { border-top: none; }</string>
+      </property>
       <property name="sizePolicy">
        <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
         <horstretch>0</horstretch>
@@ -248,7 +241,7 @@ background-color: #A0A0A0;
               <string notr="true">font: bold;</string>
              </property>
              <property name="text">
-              <string>graph:</string>
+              <string>graph </string>
              </property>
             </widget>
            </item>
@@ -747,6 +740,9 @@ background-color: #A0A0A0;
            </property>
            <item>
             <widget class="QTextBrowser" name="consoleWidget">
+             <property name="styleSheet">
+              <string notr="true">QTextBrowser { border-top: none; }</string>
+             </property>
              <property name="sizePolicy">
               <sizepolicy hsizetype="Expanding" vsizetype="Minimum">
                <horstretch>0</horstretch>
@@ -1010,7 +1006,7 @@ can not be undone but performance of the script execution will be better
              <string>Decrease/Increase the size of the font of the python code editors</string>
             </property>
             <property name="text">
-             <string>Font size:</string>
+             <string>Font size</string>
             </property>
            </widget>
           </item>
@@ -1137,7 +1133,7 @@ can not be undone but performance of the script execution will be better
           <item>
            <widget class="QLabel" name="label_3">
             <property name="text">
-             <string>Font size:</string>
+             <string>Font size</string>
             </property>
            </widget>
           </item>
@@ -1211,7 +1207,7 @@ can not be undone but performance of the script execution will be better
        <item>
         <widget class="QLabel" name="label_5">
          <property name="text">
-          <string>Font size:</string>
+          <string>Font size</string>
          </property>
         </widget>
        </item>

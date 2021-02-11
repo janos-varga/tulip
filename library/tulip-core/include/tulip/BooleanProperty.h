@@ -42,6 +42,7 @@ public:
   const std::string &getTypename() const override {
     return propertyTypename;
   }
+  DEFINE_GET_CPP_CLASS_NAME;
 
   /**
    * Reverses all values associated to graph elements,
@@ -73,6 +74,7 @@ public:
   const std::string &getTypename() const override {
     return propertyTypename;
   }
+  DEFINE_GET_CPP_CLASS_NAME;
 };
 } // namespace tlp
 

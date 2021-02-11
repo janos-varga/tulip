@@ -47,6 +47,7 @@ public:
   const std::string &getTypename() const override {
     return propertyTypename;
   }
+  DEFINE_GET_CPP_CLASS_NAME;
   void setNodeValue(const node n, tlp::StoredType<int>::ReturnedConstValue v) override;
   void setEdgeValue(const edge e, tlp::StoredType<int>::ReturnedConstValue v) override;
   void setAllNodeValue(tlp::StoredType<int>::ReturnedConstValue v) override;
@@ -121,6 +122,7 @@ public:
   const std::string &getTypename() const override {
     return propertyTypename;
   }
+  DEFINE_GET_CPP_CLASS_NAME;
 };
 } // namespace tlp
 #endif

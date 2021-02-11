@@ -57,6 +57,7 @@ public:
   const std::string &getTypename() const override {
     return propertyTypename;
   }
+  DEFINE_GET_CPP_CLASS_NAME;
 
   //=======================================
   // Methods for extra layout information
@@ -330,6 +331,7 @@ public:
   const std::string &getTypename() const override {
     return propertyTypename;
   }
+  DEFINE_GET_CPP_CLASS_NAME;
 };
 
 typedef CoordVectorProperty LayoutVectorProperty;

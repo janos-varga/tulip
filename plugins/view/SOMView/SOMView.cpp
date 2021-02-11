@@ -1039,7 +1039,7 @@ QList<QWidget *> SOMView::configurationWidgets() const {
 void SOMView::gridStructurePropertiesUpdated() {
 
   if (!checkGridValidity()) {
-    QMessageBox::critical(nullptr, tr("Bad grid"),
+    QMessageBox::critical(getGlMainWidget(), tr("Bad grid"),
                           tr("Cannot connect opposite nodes in an hexagonal grid with odd height"));
     return;
   }
@@ -1150,15 +1150,12 @@ void SOMView::addEmptyViewLabel() {
   GlLabel *noDimsLabel = new GlLabel(Coord(0, 0, 0), Size(200, 100), Color(0, 0, 0));
   noDimsLabel->setText(ViewName::SOMViewName);
   GlLabel *noDimsLabel1 = new GlLabel(Coord(0, -50, 0), Size(400, 100), Color(0, 0, 0));
-  noDimsLabel1->setText("No dimension selected.");
+  noDimsLabel1->setText("No property selected.");
   GlLabel *noDimsLabel2 = new GlLabel(Coord(0, -100, 0), Size(700, 200), Color(0, 0, 0));
-  noDimsLabel2->setText("Go to the \"Dimensions\" tab in top right corner.");
+  noDimsLabel2->setText("Go to the \"Properties\" tab in top right corner.");
   mainLayer->addGlEntity(noDimsLabel, "no dimensions label");
   mainLayer->addGlEntity(noDimsLabel1, "no dimensions label 1");
   mainLayer->addGlEntity(noDimsLabel2, "no dimensions label 2");
-  BoundingBox bbox(noDimsLabel->getBoundingBox());
-  bbox.expand(noDimsLabel2->getBoundingBox()[0]);
-  bbox.expand(noDimsLabel2->getBoundingBox()[1]);
   previewWidget->getScene()->centerScene();
 }
 

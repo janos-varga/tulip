@@ -241,6 +241,14 @@ public:
     emit resetWindowTitle();
   }
 
+  bool _restartNeeded;
+  /**
+   * @brief a function to indicate restart
+   */
+  bool needRestart() {
+    return _restartNeeded;
+  }
+
   /**
    * @brief a static function to ease the display of status messages
    */

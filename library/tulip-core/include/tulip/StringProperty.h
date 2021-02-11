@@ -43,6 +43,7 @@ public:
   const std::string &getTypename() const override {
     return propertyTypename;
   }
+  DEFINE_GET_CPP_CLASS_NAME;
   // the value size of a StringVectorProperty is not fixed
   unsigned int nodeValueSize() const override {
     return 0;
@@ -70,6 +71,7 @@ public:
   const std::string &getTypename() const override {
     return propertyTypename;
   }
+  DEFINE_GET_CPP_CLASS_NAME;
   // the value size of a StringVectorProperty is not fixed
   unsigned int nodeValueSize() const override {
     return 0;

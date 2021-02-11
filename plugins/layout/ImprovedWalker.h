@@ -21,7 +21,9 @@
 
 #include <unordered_map>
 #include <vector>
-#include <tulip/TulipPluginHeaders.h>
+
+#include <tulip/LayoutProperty.h>
+
 #include "TreeTools.h"
 
 class OrientableLayout;
@@ -33,9 +35,11 @@ class ImprovedWalkerIterator;
 
 /** This plugin is an implementation of a linear Walker's algorithm:
  *
- *  Christoph Buchheim and Michael Junger and Sebastian Leipert,
- *  Improving Walker's Algorithm to Run in Linear Time
- *  citeseer.ist.psu.edu/buchheim02improving.html
+ *  Improving Walker’s Algorithm to Run in Linear Time. \n
+ *  Buchheim C., Jünger M., Leipert S. (2002)\n
+ *  In: Goodrich M.T., Kobourov S.G. (eds) Graph Drawing (GD) 2002. \n
+ *  Lecture Notes in Computer Science, vol 2528. Springer, Berlin, Heidelberg. <a
+ *href=\"https://doi.org/10.1007/3-540-36151-0_32\">10.1007/3-540-36151-0_32</a>
  *
  *  \note This algorithm works on tree.
  *  Let n be the number of nodes, the algorithm complexity is in O(n).
@@ -49,16 +53,20 @@ class ImprovedWalker : public tlp::LayoutAlgorithm {
   friend class ImprovedWalkerUnitTests;
 
 public:
-  PLUGININFORMATION("Improved Walker",
-                    "Julien Testut, Antony Durand, Pascal Ollier, "
-                    "Yashvin Nababsing, Sebastien Leclerc, "
-                    "Thibault Ruchon, Eric Dauchier",
-                    "11/11/04",
-                    "It is a linear implementation of the Walker's tree layout improved algorithm "
-                    "published as:<br/>"
-                    "<b>Improving Walker's Algorithm to Run in Linear Time</b>, Christoph Buchheim "
-                    "and Michael Junger and Sebastian Leipert (2002).",
-                    "1.0", "Tree")
+  PLUGININFORMATION(
+      "Improved Walker",
+      "Julien Testut, Antony Durand, Pascal Ollier, "
+      "Yashvin Nababsing, Sebastien Leclerc, "
+      "Thibault Ruchon, Eric Dauchier",
+      "11/11/04",
+      "It is a linear implementation of the Walker's tree layout improved algorithm "
+      "published as:<br/>"
+      "<b>Improving Walker’s Algorithm to Run in Linear Time.</b><br>"
+      "Buchheim C., Jünger M., Leipert S. (2002), "
+      "In: Goodrich M.T., Kobourov S.G. (eds) Graph Drawing (GD) 2002, "
+      "Lecture Notes in Computer Science, vol 2528. Springer, Berlin, Heidelberg. <a "
+      "href=\"https://doi.org/10.1007/3-540-36151-0_32\">10.1007/3-540-36151-0_32</a>",
+      "1.0", "Tree")
   ImprovedWalker(const tlp::PluginContext *context);
   ~ImprovedWalker() override;
 
@@ -74,7 +82,6 @@ private:
 
   float spacing;
   float nodeSpacing;
-  static const tlp::node BADNODE;
 
   OrientableLayout *oriLayout;
   OrientableSizeProxy *oriSize;
@@ -120,7 +127,7 @@ private:
 //====================================================================
 inline tlp::node ImprovedWalker::getSuperGraph(tlp::node n) {
   if (tree->indeg(n) < 1)
-    return BADNODE;
+    return tlp::node();
 
   return tree->getInNode(n, 1);
 }
@@ -128,7 +135,7 @@ inline tlp::node ImprovedWalker::getSuperGraph(tlp::node n) {
 //====================================================================
 inline tlp::node ImprovedWalker::leftmostChild(tlp::node n) {
   if (tree->outdeg(n) < 1)
-    return BADNODE;
+    return tlp::node();
 
   return tree->getOutNode(n, 1);
 }
@@ -138,7 +145,7 @@ inline tlp::node ImprovedWalker::rightmostChild(tlp::node n) {
   int pos;
 
   if ((pos = tree->outdeg(n)) < 1)
-    return BADNODE;
+    return tlp::node();
 
   return tree->getOutNode(n, pos);
 }
@@ -146,7 +153,7 @@ inline tlp::node ImprovedWalker::rightmostChild(tlp::node n) {
 //====================================================================
 inline tlp::node ImprovedWalker::leftSibling(tlp::node n) {
   if (order[n] <= 1)
-    return BADNODE;
+    return tlp::node();
   else
     return tree->getOutNode(getSuperGraph(n), order[n] - 1);
 }
@@ -156,7 +163,7 @@ inline tlp::node ImprovedWalker::rightSibling(tlp::node n) {
   tlp::node father = getSuperGraph(n);
 
   if (order[n] >= int(tree->outdeg(father)))
-    return BADNODE;
+    return tlp::node();
 
   return tree->getOutNode(father, order[n] + 1);
 }
