@@ -76,9 +76,17 @@ class GeographicView : public View {
 public:
   enum ViewType {
     OpenStreetMap = 0,
+    OpenTopoMap,
+    EsriStreetMap,
+    EsriTopoMap,
+    EsriNatGeoMap,
     EsriSatellite,
-    EsriTerrain,
-    EsriGrayCanvas,
+    EsriLightGrayCanvas,
+    EsriDarkGrayCanvas,
+    CartoDB,
+    CartoDBLight,
+    CartoDBDark,
+    WikimediaMap,
     LeafletCustomTileLayer,
     Polygon,
     Globe
@@ -143,9 +151,7 @@ public slots:
 
   void refresh() override;
 
-  void graphChanged(Graph *) override {
-    setState(DataSet());
-  }
+  void graphChanged(tlp::Graph *) override;
 
   void graphDeleted(tlp::Graph *) override {}
 
@@ -171,7 +177,7 @@ public slots:
   void currentZoomChanged();
 
   ViewType getViewTypeFromName(const QString &name) const;
-  QString getViewNameFromType(ViewType viewType) const;
+  const char *getViewNameFromType(ViewType viewType) const;
 
 protected slots:
 
@@ -205,7 +211,7 @@ private:
   int mapZoomInit;
   ViewActionsManager *_viewActionsManager;
 
-  QMap<ViewType, QString> _viewTypeToName;
+  QMap<ViewType, const char *> _viewTypeToName;
   node _nodeUnderMouse;
 };
 } // namespace tlp

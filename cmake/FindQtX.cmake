@@ -75,6 +75,14 @@ STRING(REGEX MATCH "[0-9]\\.[0-9]+" QT_VERSION "${QT_FULL_VERSION}")
 
 IF(NOT "${QT_VERSION}" STREQUAL "${LAST_FOUND_QT_VERSION}")
   MESSAGE(STATUS "Found Qt5 (version ${QT_FULL_VERSION})")
+  IF(APPLE)
+    # Check minor version since on MacOS
+    # OpenGl selection does not work for Qt5 > 5.9
+    STRING(SUBSTRING "${QT_VERSION}" 2 -1 QT_MINOR)
+    IF(${QT_MINOR} GREATER 9)
+      MESSAGE(STATUS "Warning: Interactive selection of drawn objects does not work for Qt > 5.9")
+    ENDIF(${QT_MINOR} GREATER 9)
+  ENDIF(APPLE)
 ENDIF(NOT "${QT_VERSION}" STREQUAL "${LAST_FOUND_QT_VERSION}")
 
 SET(LAST_FOUND_QT_VERSION "${QT_VERSION}" CACHE INTERNAL "")
@@ -137,8 +145,10 @@ ENDIF(APPLE)
 
 # Check if the Qt5 installation is bundled with WebKit (deprecated since Qt 5.5)
 # and setup its use if it is the case.
+# Since WebKit is the default we may want to force WebEngine for testing purpose
+SET(TULIP_GEOVIEW_USE_WEBENGINE OFF CACHE BOOL "Use QWebEngine ? [ON|OFF]")
 SET(QT_WEBKIT_WIDGETS_CMAKE_DIR "${QT_CMAKE_DIR}/Qt5WebKitWidgets")
-IF(EXISTS ${QT_WEBKIT_WIDGETS_CMAKE_DIR})
+IF(NOT TULIP_GEOVIEW_USE_WEBENGINE AND EXISTS ${QT_WEBKIT_WIDGETS_CMAKE_DIR})
   FIND_PACKAGE(Qt5WebKit)
   FIND_PACKAGE(Qt5WebKitWidgets)
   IF(${Qt5WebKit_FOUND} AND ${Qt5WebKitWidgets_FOUND})
@@ -147,7 +157,7 @@ IF(EXISTS ${QT_WEBKIT_WIDGETS_CMAKE_DIR})
     SETUP_QT_LIBRARIES(WebKit QT_WEB_LIBRARIES)
     SETUP_QT_LIBRARIES(WebKitWidgets QT_WEB_LIBRARIES)
   ENDIF(${Qt5WebKit_FOUND} AND ${Qt5WebKitWidgets_FOUND})
-ENDIF(EXISTS ${QT_WEBKIT_WIDGETS_CMAKE_DIR})
+ENDIF(NOT TULIP_GEOVIEW_USE_WEBENGINE AND EXISTS ${QT_WEBKIT_WIDGETS_CMAKE_DIR})
 
 # If Qt5 is not bundled with WebKit then check if its installation
 # provides WebEngine (new web module since Qt 5.4) and setup its use.

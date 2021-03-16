@@ -20,8 +20,8 @@
 
 #include <tulip/Graph.h>
 #include <tulip/GlLayer.h>
-#include <tulip/GlConvexHull.h>
 #include <tulip/GlConvexGraphHull.h>
+#include <tulip/GlTextureManager.h>
 #include <tulip/DoubleProperty.h>
 #include <tulip/LayoutProperty.h>
 #include <tulip/SizeProperty.h>
@@ -32,6 +32,23 @@ using namespace std;
 
 namespace tlp {
 
+class GlHierarchyMainComposite : public GlConvexGraphHullsComposite {
+public:
+  GlHierarchyMainComposite(GlCompositeHierarchyManager *manager);
+  void setVisible(bool visible) override;
+
+private:
+  GlCompositeHierarchyManager *_manager;
+};
+
+GlHierarchyMainComposite::GlHierarchyMainComposite(GlCompositeHierarchyManager *manager)
+    : _manager(manager) {}
+
+void GlHierarchyMainComposite::setVisible(bool visible) {
+  _manager->setVisible(visible);
+  GlSimpleEntity::setVisible(visible);
+}
+
 const std::string GlCompositeHierarchyManager::temporaryPropertyValue =
     "temporaryPropertyFromGlCompositeHierarchyManager";
 
@@ -41,7 +58,7 @@ GlCompositeHierarchyManager::GlCompositeHierarchyManager(Graph *graph, GlLayer *
                                                          DoubleProperty *rotation, bool visible,
                                                          const std::string &namingProperty,
                                                          const std::string &subCompositeSuffix)
-    : _currentColor(0), _graph(graph), _layer(layer),
+    : _currentColor(0), _currentTexture(0), _graph(graph), _layer(layer),
       _composite(new GlHierarchyMainComposite(this)), _layout(layout), _size(size),
       _rotation(rotation), _layerName(layerName), _isVisible(visible),
       _subCompositesSuffix(subCompositeSuffix), _nameAttribute(namingProperty) {
@@ -59,35 +76,57 @@ GlCompositeHierarchyManager::GlCompositeHierarchyManager(Graph *graph, GlLayer *
   _fillColors.emplace_back(255, 220, 0, 100);
   _fillColors.emplace_back(252, 255, 158, 100);
 
+  _fillTextures.reserve(5);
+  _fillTextures.emplace_back(TulipBitmapDir + "verticalStripesTexture.png");
+  _fillTextures.emplace_back(TulipBitmapDir + "horizontalStripesTexture.png");
+  _fillTextures.emplace_back(TulipBitmapDir + "slashStripesTexture.png");
+  _fillTextures.emplace_back(TulipBitmapDir + "backSlashStripesTexture.png");
+  _fillTextures.emplace_back(TulipBitmapDir + "circleTexture.png");
+
   if (_isVisible) {
     createComposite();
   }
 }
 
-const tlp::Color GlCompositeHierarchyManager::getColor() {
-  tlp::Color current = this->_fillColors.at(_currentColor++);
+const tlp::Color &GlCompositeHierarchyManager::getColor() {
+  const tlp::Color &current = _fillColors[_currentColor++];
   _currentColor = _currentColor % _fillColors.size();
   return current;
 }
 
-void GlCompositeHierarchyManager::buildComposite(Graph *current, GlComposite *composite) {
+const std::string &GlCompositeHierarchyManager::getTexture() {
+  const std::string &current = _fillTextures[_currentTexture++];
+  _currentTexture = _currentTexture % _fillTextures.size();
+  return current;
+}
+
+void GlCompositeHierarchyManager::buildComposite(Graph *current,
+                                                 GlConvexGraphHullsComposite *composite) {
+  static bool loadTextures = true;
+  if (loadTextures) {
+    for (const string &texture : _fillTextures)
+      GlTextureManager::loadTexture(texture);
+    loadTextures = false;
+  }
   current->addListener(this);
 
   stringstream naming;
   naming << current->getName() << " [#" << current->getId() << ']';
-  GlConvexGraphHull *hull = new GlConvexGraphHull(composite, naming.str(), getColor(), current,
-                                                  _layout, _size, _rotation);
+  GlConvexGraphHull *hull =
+      new GlConvexGraphHull(composite, naming.str(), getColor(), _fillTextures[_currentColor - 1],
+                            current, _layout, _size, _rotation);
+  hull->setTextureZoom(0.02);
 
-  _graphsComposites.emplace(current,
-                            std::pair<GlComposite *, GlConvexGraphHull *>(composite, hull));
+  _graphsComposites.emplace(
+      current, std::pair<GlConvexGraphHullsComposite *, GlConvexGraphHull *>(composite, hull));
 
   if (!current->subGraphs().empty()) {
-    GlComposite *newComposite = new GlComposite();
+    GlConvexGraphHullsComposite *newComposite = new GlConvexGraphHullsComposite();
     naming << " - " << _subCompositesSuffix;
     composite->addGlEntity(newComposite, naming.str());
 
     for (Graph *sg : current->subGraphs()) {
-      this->buildComposite(sg, newComposite);
+      buildComposite(sg, newComposite);
     }
   }
 }
@@ -219,14 +258,14 @@ void GlCompositeHierarchyManager::treatEvents(const std::vector<Event> &) {
 
 void GlCompositeHierarchyManager::setGraph(tlp::Graph *graph) {
   // TODO here we could rebuild only if the graph is not in the composites map
-  this->_graph = graph;
+  _graph = graph;
   //    deleteComposite();
   if (_isVisible)
-    this->createComposite();
+    createComposite();
 }
 
 void GlCompositeHierarchyManager::createComposite() {
-  this->_composite->reset(true);
+  _composite->reset(true);
   _graphsComposites.clear();
   LayoutProperty *layout = _graph->getProperty<LayoutProperty>(_layout->getName());
   if (layout != _layout) {
@@ -247,15 +286,14 @@ void GlCompositeHierarchyManager::createComposite() {
     _rotation->addObserver(this);
   }
 
-  //    this->_composite->setVisible(_isVisible);
-  this->buildComposite(_graph, _composite);
+  buildComposite(_graph, _composite);
 }
 
 void GlCompositeHierarchyManager::setVisible(bool visible) {
   if (_isVisible == visible)
     return;
 
-  this->_isVisible = visible;
+  _isVisible = visible;
   _composite->setVisible(visible);
 
   if (_isVisible) {
@@ -296,13 +334,5 @@ void GlCompositeHierarchyManager::setData(const DataSet &dataSet) {
       it.second.second->setVisible(secondVisibility);
     }
   }
-}
-
-GlHierarchyMainComposite::GlHierarchyMainComposite(GlCompositeHierarchyManager *manager)
-    : _manager(manager) {}
-
-void GlHierarchyMainComposite::setVisible(bool visible) {
-  _manager->setVisible(visible);
-  GlSimpleEntity::setVisible(visible);
 }
 } // namespace tlp

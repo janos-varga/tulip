@@ -29,6 +29,7 @@
 #include <tulip/OpenGlConfigManager.h>
 #include <tulip/NodeLinkDiagramComponent.h>
 #include <tulip/GlOffscreenRenderer.h>
+#include <tulip/TulipViewSettings.h>
 
 #include <QMenu>
 #include <QThread>
@@ -53,13 +54,21 @@ GeographicView::GeographicView(PluginContext *)
       useSharedShapeProperty(true), mapCenterLatitudeInit(0), mapCenterLongitudeInit(0),
       mapZoomInit(0), _viewActionsManager(nullptr) {
   _viewType = OpenStreetMap;
-  _viewTypeToName[OpenStreetMap] = "Open Street Map (Leaflet)";
-  _viewTypeToName[EsriSatellite] = "Esri Satellite (Leaflet)";
-  _viewTypeToName[EsriTerrain] = "Esri Terrain (Leaflet)";
-  _viewTypeToName[EsriGrayCanvas] = "Esri Gray Canvas (Leaflet)";
+  _viewTypeToName[OpenStreetMap] = "OpenStreetMap";
+  _viewTypeToName[OpenTopoMap] = "OpenTopoMap";
+  _viewTypeToName[EsriStreetMap] = "Esri World Street Map";
+  _viewTypeToName[EsriTopoMap] = "Esri Topographic Map";
+  _viewTypeToName[EsriNatGeoMap] = "Esri National Geographic Map";
+  _viewTypeToName[EsriSatellite] = "Esri World Imagery";
+  _viewTypeToName[EsriLightGrayCanvas] = "Esri Light Gray Canvas";
+  _viewTypeToName[EsriDarkGrayCanvas] = "Esri Dark Gray Canvas";
+  _viewTypeToName[CartoDB] = "CartoDB Map";
+  _viewTypeToName[CartoDBLight] = "CartoDB Light Map";
+  _viewTypeToName[CartoDBDark] = "CartoDB Dark Map";
+  _viewTypeToName[WikimediaMap] = "Wikimedia Map";
+  _viewTypeToName[LeafletCustomTileLayer] = "Leaflet Custom Tile Layer";
   _viewTypeToName[Polygon] = "Polygon";
   _viewTypeToName[Globe] = "Globe";
-  _viewTypeToName[LeafletCustomTileLayer] = "Custom Tile Layer (Leaflet)";
 }
 
 GeographicView::~GeographicView() {
@@ -91,6 +100,21 @@ void GeographicView::setupUi() {
 
   activateTooltipAndUrlManager(geoViewGraphicsView->getGlMainWidget());
   _viewActionsManager = new ViewActionsManager(this, geoViewGraphicsView->getGlMainWidget(), true);
+}
+
+void GeographicView::graphChanged(Graph *g) {
+  setState(DataSet());
+
+  if (g->isEmpty()) {
+    // we perform an acceptable automatic configuration
+    // in order to allow an interactive creation of the graph
+    // over the geographic map, using the 'Add nodes/edges'
+    // and 'Edit edge bends' view interactors
+    auto prop = g->getProperty<SizeProperty>("viewSize");
+    if (prop->getNodeDefaultValue() == TulipViewSettings::defaultSize(ElementType::NODE))
+      prop->setNodeDefaultValue({0.0005, 0.0005, 0.0005});
+    computeGeoLayout();
+  }
 }
 
 void GeographicView::viewTypeChanged(QString viewTypeName) {
@@ -500,7 +524,7 @@ GeographicView::ViewType GeographicView::getViewTypeFromName(const QString &name
   return OpenStreetMap;
 }
 
-QString GeographicView::getViewNameFromType(GeographicView::ViewType viewType) const {
+const char *GeographicView::getViewNameFromType(GeographicView::ViewType viewType) const {
   if (_viewTypeToName.contains(viewType)) {
     return _viewTypeToName[viewType];
   }

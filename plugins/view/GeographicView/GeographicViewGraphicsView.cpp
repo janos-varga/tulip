@@ -211,148 +211,6 @@ GlComposite *readCsvFile(QString fileName) {
   return composite;
 }
 
-/* not used
-void simplifyPolyFile(QString fileName, float definition) {
-
-  map<string, vector<vector<Coord>>> clearPolygons;
-
-  QFile file(fileName);
-
-  if (!file.open(QIODevice::ReadOnly)) {
-    return;
-  }
-
-  string polygonName = "";
-  vector<vector<Coord>> datas;
-  vector<Coord> currentVector;
-  bool ok;
-
-  while (!file.atEnd()) {
-    QString line(file.readLine());
-
-    if (line.isEmpty() || line == "\n")
-      continue;
-
-    line.toUInt(&ok);
-
-    if (ok) {
-      if (!currentVector.empty())
-        datas.push_back(currentVector);
-
-      currentVector.clear();
-      continue;
-    }
-
-    if (line == "END\n")
-      continue;
-
-    QStringList strList = line.split(" ");
-
-    bool findLng = false;
-    bool findLat = false;
-    float lng;
-    float lat;
-
-    for (const auto &s : strList) {
-      s.toDouble(&ok);
-
-      if (ok) {
-        if (!findLng) {
-          findLng = true;
-          lng = s.toDouble();
-        } else {
-          findLat = true;
-          lat = s.toDouble();
-        }
-      }
-    }
-
-    if (!findLat) {
-
-      if (!polygonName.empty()) {
-
-        if (!currentVector.empty())
-          datas.push_back(currentVector);
-
-        if (!datas.empty()) {
-
-          clearPolygons[polygonName] = datas;
-          datas.clear();
-          currentVector.clear();
-        }
-      }
-
-      polygonName = QStringToTlpString(line);
-      continue;
-    }
-
-    double mercatorLatitude = lat * 2. / 360. * M_PI;
-    mercatorLatitude = sin(abs(mercatorLatitude));
-    mercatorLatitude = log((1. + mercatorLatitude) / (1. - mercatorLatitude)) / 2.;
-
-    if (lat < 0)
-      mercatorLatitude = 0. - mercatorLatitude;
-
-    currentVector.emplace_back(lng, lat, 0);
-  }
-
-  if (!polygonName.empty()) {
-    if (!currentVector.empty())
-      datas.push_back(currentVector);
-
-    clearPolygons.emplace(polygonName, std::move(datas));
-  }
-
-  unordered_map<Coord, Coord> simplifiedCoord;
-
-  QString newName(fileName);
-  newName.replace(".poly", QString("_") + QString::number(definition) + ".poly");
-  QFile fileW(newName);
-
-  if (!fileW.open(QIODevice::WriteOnly | QIODevice::Text)) {
-    return;
-  }
-
-  QTextStream out(&fileW);
-
-  Coord *lastCoord = nullptr;
-
-  for (auto &poly : clearPolygons) {
-    out << poly.first.c_str();
-
-    unsigned int i = 1;
-
-    for (auto &vcoord : poly.second) {
-      out << i << "\n";
-
-      for (auto &coord : vcoord) {
-        if (lastCoord == nullptr) {
-          out << coord[0] << " " << coord[1] << "\n";
-          lastCoord = &coord;
-        } else {
-          if (lastCoord->dist(coord) > definition) {
-            if (simplifiedCoord.count(coord) == 0) {
-              out << coord[0] << " " << coord[1] << "\n";
-              lastCoord = &coord;
-            } else {
-              lastCoord = &simplifiedCoord[coord];
-              out << (*lastCoord)[0] << " " << (*lastCoord)[1] << "\n";
-            }
-          } else {
-            if (simplifiedCoord.count(coord) == 0)
-              simplifiedCoord[coord] = *lastCoord;
-          }
-        }
-      }
-
-      out << "END\n";
-
-      ++i;
-    }
-  }
-}
-*/
-
 static double latitudeToMercator(double latitude) {
   double mercatorLatitude = latitude * M_PI / 360.;
   mercatorLatitude = sin(abs(mercatorLatitude));
@@ -431,15 +289,12 @@ GeographicViewGraphicsView::GeographicViewGraphicsView(GeographicView *geoView,
 
   // combo box to choose the map type
   viewTypeComboBox = new QComboBox;
-  viewTypeComboBox->addItems(
-      QStringList() << _geoView->getViewNameFromType(GeographicView::OpenStreetMap)
-                    << _geoView->getViewNameFromType(GeographicView::OpenStreetMap)
-                    << _geoView->getViewNameFromType(GeographicView::EsriSatellite)
-                    << _geoView->getViewNameFromType(GeographicView::EsriTerrain)
-                    << _geoView->getViewNameFromType(GeographicView::EsriGrayCanvas)
-                    << _geoView->getViewNameFromType(GeographicView::LeafletCustomTileLayer)
-                    << _geoView->getViewNameFromType(GeographicView::Polygon)
-                    << _geoView->getViewNameFromType(GeographicView::Globe));
+  QStringList mapItems;
+  mapItems.append(_geoView->getViewNameFromType(GeographicView::OpenStreetMap));
+  for (GeographicView::ViewType t = GeographicView::OpenStreetMap; t <= GeographicView::Globe;
+       t = GeographicView::ViewType(t + 1))
+    mapItems.append(_geoView->getViewNameFromType(t));
+  viewTypeComboBox->addItems(mapItems);
   viewTypeComboBox->insertSeparator(1);
 
   QGraphicsProxyWidget *comboBoxProxy = scene()->addWidget(viewTypeComboBox);
@@ -1182,10 +1037,11 @@ void GeographicViewGraphicsView::timerEvent(QTimerEvent *event) {
 #endif
 
 void GeographicViewGraphicsView::refreshMap() {
-  if (!leafletMaps->isVisible() || !leafletMaps->mapLoaded() || !glMainWidget->isCurrent()) {
+  if (!leafletMaps->isVisible() || !leafletMaps->mapLoaded()) {
     return;
   }
 
+  GlOffscreenRenderer::getInstance()->makeOpenGLContextCurrent();
   BoundingBox bb;
   Coord rightCoord = leafletMaps->getPixelPosOnScreenForLatLng(180, 180);
   Coord leftCoord = leafletMaps->getPixelPosOnScreenForLatLng(0, 0);
@@ -1267,10 +1123,6 @@ void GeographicViewGraphicsView::treatEvent(const Event &ev) {
 }
 
 void GeographicViewGraphicsView::switchViewType() {
-  bool makeCurrent = !glMainWidget->isCurrent();
-  if (makeCurrent)
-    glMainWidget->makeCurrent();
-
   GeographicView::ViewType viewType = _geoView->viewType();
 
   bool enableLeafletMap = false;
@@ -1278,34 +1130,16 @@ void GeographicViewGraphicsView::switchViewType() {
   bool enablePlanisphere = false;
 
   switch (viewType) {
-  case GeographicView::OpenStreetMap: {
-    enableLeafletMap = true;
-    leafletMaps->switchToOpenStreetMap();
-    break;
-  }
-
-  case GeographicView::EsriSatellite: {
-    enableLeafletMap = true;
-    leafletMaps->switchToEsriSatellite();
-    break;
-  }
-
-  case GeographicView::EsriTerrain: {
-    enableLeafletMap = true;
-    leafletMaps->switchToEsriTerrain();
-    break;
-  }
-
-  case GeographicView::EsriGrayCanvas: {
-    enableLeafletMap = true;
-    leafletMaps->switchToEsriGrayCanvas();
-    break;
-  }
 
   case GeographicView::LeafletCustomTileLayer: {
     enableLeafletMap = true;
-    QString customTileLayerUrl = _geoView->getConfigWidget()->getCustomTileLayerUrl();
-    leafletMaps->switchToCustomTileLayer(customTileLayerUrl);
+    QString url = _geoView->getConfigWidget()->getCustomTileLayerUrl();
+    QString attribution = _geoView->getConfigWidget()->getCustomTilesAttribution();
+    // if attribution is empty or fill with white spaces
+    // set it to url
+    if (attribution.simplified().isEmpty())
+      attribution = url;
+    leafletMaps->switchToCustomTileLayer(url, attribution);
     break;
   }
 
@@ -1321,7 +1155,8 @@ void GeographicViewGraphicsView::switchViewType() {
   }
 
   default:
-    break;
+    enableLeafletMap = true;
+    leafletMaps->switchToBaseLayer(_geoView->getViewNameFromType(viewType));
   }
 
   if (planisphereEntity && planisphereEntity->isVisible()) {
@@ -1498,9 +1333,6 @@ void GeographicViewGraphicsView::switchViewType() {
   Observable::unholdObservers();
 
   graph->popIfNoUpdates();
-
-  if (makeCurrent)
-    glMainWidget->doneCurrent();
 
   draw();
 }
